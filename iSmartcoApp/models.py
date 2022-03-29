@@ -4,8 +4,8 @@ from tkinter import CASCADE
 from django.contrib.auth.models import AbstractUser, User
 from django.db import models
 
-from models import Company
 
+#class User(AbstractUser):
 
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
@@ -17,7 +17,7 @@ class JobCard(models.Model):
     job_card_location = models.CharField(max_length=100, null=True, blank=True) # department
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    Job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+    job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     #job_card_technician = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     job_card_technician = models.CharField(max_length=100, null=True, blank=True)
     job_card_type = models.CharField(max_length=100, null=True, blank=True)
@@ -29,15 +29,16 @@ class JobCard(models.Model):
     job_card_nva_time = models.TimeField(null=True, blank=True)
 
 
-# Create your models here.
-
-#class CustomUsers(AbstractUser):
-    #user_type_data = ((1, "sysAdmin"), (2, "Employee"), (3, "Comp_Admin"), (4, "Client"))
-    #user_type = models.CharField(default=3, choices=user_type_data, max_length=10)   
-    #company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
-    #USERNAME_FIELD = ['email']
-    
 '''
+Create your models here.
+
+class CustomUsers(AbstractUser):
+    user_type_data = ((1, "sysAdmin"), (2, "Employee"), (3, "Comp_Admin"), (4, "Client"))
+    user_type = models.CharField(default=3, choices=user_type_data, max_length=10)   
+    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
+    USERNAME_FIELD = ['email']
+    
+
 class Company(models.Model):
     companyId = models.AutoField(primary_key=True)
     companyName = models.CharField(max_length=100, default="Dummy Name")

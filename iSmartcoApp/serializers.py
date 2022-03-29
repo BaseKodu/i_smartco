@@ -37,7 +37,7 @@ class JobCardSerializers(serializers.ModelSerializer):
                   'job_card_location',
                   'job_card_created_at',
                   'job_card_started_at',
-                  'iJob_card_completed_at',
+                  'job_card_completed_at',
                   'job_card_technician',
                   'job_card_type',
                   'job_card_status',

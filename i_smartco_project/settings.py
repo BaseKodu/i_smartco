@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'i_smartco_project.apps.i_smartco_projectConfig',
+    'iSmartcoApp',
     'rest_framework'
 ]
 

@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
-from iSmartcoApp.models import Company, JobCard
+from iSmartcoApp.models import JobCard
 from iSmartcoApp.serializers import JobCardSerializers
 
 # Create your views here.
