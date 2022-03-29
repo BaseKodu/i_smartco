@@ -3,8 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
-from iSmartcoApp.models import JobCard
-from iSmartcoApp.serializers import JobCardSerializers
+from iSmartcoApp.models import JobCard, Employee
+from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers
 
 # Create your views here.
 
@@ -34,3 +34,28 @@ def JobCardApi(request):
 			return JsonResponse(serializer.data)
 		return JsonResponse(serializer.errors, status=400)
 		
+
+#create employee
+@csrf_exempt
+def EmployeeApi(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = EmployeeSerializers(data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+	
+	elif request.method == 'GET':
+		employee = Employee.objects.all()
+		serializer = EmployeeSerializers(employee, many=True)
+		return JsonResponse(serializer.data, safe=False)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		employee = Employee.objects.get(id=data['id'])
+		serializer = EmployeeSerializers(employee, data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data)
+		return JsonResponse(serializer.errors, status=400)
