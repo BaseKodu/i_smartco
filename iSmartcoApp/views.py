@@ -3,10 +3,34 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
-from iSmartcoApp.models import JobCard, Employee, Company
-from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers, CompanySerializers
+from iSmartcoApp.models import JobCard, Employee, Company, Client
+from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers
 
 # Create your views here.
+
+@csrf_exempt
+def ClientApi(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = ClientSerializers(data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+	elif request.method == 'GET':
+		client = Client.objects.all()
+		serializer = ClientSerializers(client, many=True)
+		return JsonResponse(serializer.data, safe=False)
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		serializer = ClientSerializers(data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+	
+	
+
 
 
 @csrf_exempt
@@ -23,7 +47,7 @@ def CompanyApi(request):
 		companies = Company.objects.all()
 		serializer = CompanySerializers(companies, many=True)
 		return JsonResponse(serializer.data, safe=False)
-		
+
 	elif request.method == 'PUT':
 		data = JSONParser().parse(request)
 		serializer = CompanySerializers(data=data)
