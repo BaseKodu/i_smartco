@@ -7,4 +7,5 @@ from django.conf import settings
 urlpatterns=[
     re_path(r'^JobCardApi$',views.JobCardApi),
     re_path(r'^EmployeeApi$',views.EmployeeApi),	
+    re_path(r'^CompanyApi$',views.CompanyApi),
 ]
