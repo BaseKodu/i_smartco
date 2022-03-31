@@ -51,7 +51,27 @@ class EmployeeSerializers(serializers.ModelSerializer):
 
 
 class JobCardSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = JobCard
-        fields = '__all__'
+	company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')
+	last_job_card_number = serializers.SerializerMethodField('get_last_job_card_number')
+	get_client_name = serializers.SerializerMethodField('get_client_name_from_Client')
+	get_employee_name = serializers.SerializerMethodField('get_employee_name_from_Employee')
+
+	def get_company_name_from_JobCard(self, job_card):
+		return job_card.company.company_name
+
+	def get_last_job_card_number(self, job_card):
+		return job_card.last_job_card_number
+ 
+	def get_client_name_from_Client(self, job_card):
+		return job_card.client.client_name
+
+	def get_employee_name_from_Employee(self, job_card):
+		return job_card.employee.employee_name
+
+	class Meta:
+		model = JobCard
+		fields = '__all__'
+
+
+
 
