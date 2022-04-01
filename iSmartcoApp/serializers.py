@@ -6,13 +6,30 @@ from iSmartcoApp.models import JobCard, Employee, Company, Client, User
 class RegistrationSerializer(serializers.ModelSerializer):
 
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+	company_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
 
 	class Meta:
 		model = User
 		fields = ['email', 'username', 'password', 'password2']
 		extra_kwargs = {
 				'password': {'write_only': True},
+				'company_name': {'write_only': False}
 		}	
+
+	def post_to_company(self):
+		company = Company(
+						name=self.validated_data['company_name'],
+						user=self.instance
+					)
+		company.save()
+		employee = Employee(
+						user=self.instance,
+						company=company
+					)
+		employee.save()
+		return company
+		return company
+		
 
 
 	def	save(self):
