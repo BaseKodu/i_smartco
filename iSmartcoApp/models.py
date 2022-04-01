@@ -91,6 +91,16 @@ class Client(models.Model):
         return self.name
 
 
+class JobCardCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    owned_by = models.ManyToManyField('Company', blank=True)
+    def __str__(self):
+        return self.name
+
+
 class Company(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, null=True, blank=True)
@@ -100,7 +110,6 @@ class Company(models.Model):
     website = models.CharField(max_length=255, null=True, blank=True)
     created_by = models.EmailField(max_length=100, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
     def __str__(self):
         return self.name
 
@@ -115,6 +124,9 @@ class Employee(models.Model):
     employee_joining_date = models.DateField(blank=True, null=True)
     employee_leaving_date = models.DateField(blank=True, null=True)
     employee_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True)
+
 
     # created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -124,7 +136,7 @@ class Employee(models.Model):
 
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
-    job_card_number = models.CharField(max_length=100, null=True, blank=True)  # unique for every company
+    job_card_number = models.IntegerField()  # unique for every company
     job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     # job_card_client = models.CharField(max_length=100, null=True, blank=True)

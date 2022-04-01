@@ -17,6 +17,7 @@ def RegisterApi(request):
 		serializer = RegistrationSerializer(data=data)
 		if serializer.is_valid():
 			serializer.save()
+			serializer.post_to_company()
 			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -68,7 +69,7 @@ def ClientApi(request):
 
 
 @csrf_exempt
-def CompanyApi(request):
+def CompanyApi(request): #could very well prove to be unnecessary
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = CompanySerializers(data=data)
@@ -97,8 +98,10 @@ def JobCardApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = JobCardSerializers(data=data)
+		last_job_card_number = serializer.get_last_job_card_number() + 1
 		if serializer.is_valid():
 			serializer.save()
+			serializer.last_job_card_number = last_job_card_number
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	
