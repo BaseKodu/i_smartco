@@ -1,6 +1,10 @@
 from rest_framework import serializers
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.template.loader import render_to_string
 
 from iSmartcoApp.models import JobCard, Employee, Company, Client, User
+
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -23,7 +27,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 						created_by = self.validated_data['email']
 					)
 		company.save()
-		company.save()
 
 		
 
@@ -42,6 +45,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		user.save()
 		return user
 
+		#check denis ivy for payment stuff
+		template = render_to_string('templates/email_template.html', {request.user.username})
+		email = EmailMessage('Welcome to iSmartco', 
+							 'Thank you for registering with us.',
+							 settings.EMAIL_HOST_USER,
+							 to=[self.validated_data['email']])
 
 
 
