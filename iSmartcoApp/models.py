@@ -35,6 +35,18 @@ class MyAccountManager(BaseUserManager):
 
 '''
 
+class MaterialUsed(models.Model):
+    material_name = models.CharField(max_length=100, null=True, blank=True)
+    material_barcode = models.CharField(max_length=100, null=True, blank=True)	
+    material_quantity = models.IntegerField(null=True, blank=True)
+    material_unit = models.CharField(max_length=100, null=True, blank=True)
+    material_price = models.IntegerField(null=True, blank=True)
+    material_remarks = models.CharField(max_length=100, null=True, blank=True)
+    material_job = models.ForeignKey('Job', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.material_name
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
@@ -157,6 +169,6 @@ class JobCard(models.Model):
     job_card_nva_time = models.TimeField(null=True,
                                          blank=True)  # describes the time in which nothing was done. Will be done in the frontend
     job_card_requester = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-
+    is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.job_card_number

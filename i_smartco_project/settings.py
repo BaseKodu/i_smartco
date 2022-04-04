@@ -41,8 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'iSmartcoApp',
     'rest_framework',
-    'channels',
-    'notification',
+    #'channels',
+    #'notification',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -80,6 +80,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'i_smartco_project.wsgi.application'
 
 ASGI_APPLICATION = 'i_smartco_project.asgi.application'
+
+#ASGI_APPLICATION = "routing.application"
 
 CHANNEL_LAYERS = {
     'default': {
