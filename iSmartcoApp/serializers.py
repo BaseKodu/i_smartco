@@ -3,7 +3,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.template.loader import render_to_string
 
-from iSmartcoApp.models import JobCard, Employee, Company, Client, User
+from iSmartcoApp.models import JobCard, Employee, Company, Client, User, MaterialUsed, JobCardCategory
 
 
 
@@ -67,45 +67,91 @@ class CompanySerializers(serializers.ModelSerializer):
 
 
 class EmployeeSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = Employee
-        fields = '__all__'
+
+	get_total_employees = serializers.SerializerMethodField('get_total_employees')
+	def get_total_employees(self, *args, **kwargs):
+		employee_company = kwargs.get('employee_company', None)
+		return Employee.objects.filter(employee_company= employee_company).count()
+
+
+	class Meta:
+		model = Employee
+		fields = '__all__'
 
 
 class JobCardSerializers(serializers.ModelSerializer):
-	company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')
-	last_job_card_number = serializers.SerializerMethodField('get_last_job_card_number')
-	get_client_name = serializers.SerializerMethodField('get_client_name_from_Client')
-	get_employee_name = serializers.SerializerMethodField('get_employee_name_from_Employee')
+	
+	
+	#for displaying
 	total_num_of_jobs = serializers.SerializerMethodField('get_total_num_of_jobs')
-
-	def get_last_job_card_number(self, job_card, company_id):#ensures every company gets a unique job card number that isnt id
-		last_job_card_number = JobCard.objects.filter(company_id=company_id).last()
-		return last_job_card_number.job_card_number
-
 	def total_num_of_jobs(self, *args, **kwargs): #test properly when theres a lot of data in the table
 		#some filters wont be added to the query
+		#view jobs by company, employee, client, status, category, date
 		company_id = kwargs.get('company_id', None)
 		category_id = kwargs.get('category_id', None)
 		employee_id = kwargs.get('employee_id', None)
 		client_id = kwargs.get('client_id', None)
 		date_started = kwargs.get('date_started', None)
 		date_completed = kwargs.get('date_completed', None)
-		return JobCard.objects.filter(company_id=company_id, category_id=category_id, employee_id=employee_id, client_id=client_id, date_started=date_started, date_completed=date_completed).count()
+		job_card_status = kwargs.get('job_card_status', None)
+		priority = kwargs.get('priority', None)
+		return JobCard.objects.filter(job_card_company=company_id, job_category=category_id, job_card_technicians=employee_id, job_card_client=client_id, job_card_started_at=date_started, job_card_completed_at=date_completed, job_card_status=job_card_status, job_card_priority=priority).count()
 
-		
+
+
+	get_job_card_category = serializers.SerializerMethodField('get_job_card_category')
+	def get_job_card_category(self, job_card):
+		company_categories = JobCardCategory.objects.filter(owned_by=job_card.job_card_company)
+		return company_categories.id
+
+
+	get_last_job_card_number = serializers.SerializerMethodField('get_last_job_card_number')
+	def get_last_job_card_number(self, job_card, company_id):#ensures every company gets a unique job card number that isnt id
+		last_job_card_number = JobCard.objects.filter(company_id=company_id).last()
+		return last_job_card_number.job_card_number
+
+	company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
 	def get_company_name_from_JobCard(self, job_card):
 		return job_card.company.company_name
 
+	get_client_name = serializers.SerializerMethodField('get_client_name_from_Client')
 	def get_client_name_from_Client(self, job_card):
-		return job_card.client.client_name
+		return job_card.client.id
 
+	get_employee_name = serializers.SerializerMethodField('get_employee_name_from_Employee')
 	def get_employee_name_from_Employee(self, job_card):
-		return job_card.employee.employee_name
+		return job_card.employee.id
+
 
 	class Meta:
 		model = JobCard
-		fields = '__all__'
+		#fields = '__all__'
+		fields = ['email', 'username', 'password', 'password2', 'company_name']
+		extra_kwargs = {
+				'password': {'write_only': True},
+				'company_name': {'write_only': False}
+		}
+
+
+	def post_to_JobCard(self, validated_data):
+		job_card = JobCard(
+							#job_card_number= get_last_job_card_number(job_card), needs to be done on  --> models.py
+							job_card_client=validated_data['client_id'],
+							job_card_company=validated_data['company_id'],
+							job_card_reference = validated_data['reference'],
+							technicians = validated_data['technicians'],
+							job_card_status = validated_data['job_card_status'],
+							job_card_description = validated_data['job_card_description'],
+							job_card_priority = validated_data['job_card_priority'],
+							job_card_resolution = validated_data['job_card_resolution'],
+							job_card_completion_description = validated_data['job_card_completion_description'],
+							job_card_requester = validated_data['job_card_requester'],
+							job_category=validated_data['category_id'],
+							job_card_description=validated_data['job_card_description'],
+							job_card_status=validated_data['job_card_status']
+						)
+		job_card.save()
+		return job_card
 
 
 class JobCardCategory(serializers.ModelSerializer):

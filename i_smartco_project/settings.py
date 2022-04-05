@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     #'notification',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,6 +58,10 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
+
+REST_FRAMEWORK = {'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny']}
+CORS_ORIGIN_ALLOW_ALL = True
+
 
 ROOT_URLCONF = 'i_smartco_project.urls'
 
@@ -83,6 +87,7 @@ ASGI_APPLICATION = 'i_smartco_project.asgi.application'
 
 #ASGI_APPLICATION = "routing.application"
 
+'''
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -91,7 +96,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
+'''
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

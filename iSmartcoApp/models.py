@@ -1,39 +1,10 @@
+from secrets import choice
 from statistics import mode
 from tkinter import CASCADE
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
-'''
-class MyAccountManager(BaseUserManager):
-	def create_user(self, email, username, password=None):
-		if not email:
-			raise ValueError('Users must have an email address')
-		if not username:
-			raise ValueError('Users must have a username')
 
-		user = self.model(
-			email=self.normalize_email(email),
-			username=username,
-		)
-
-		user.set_password(password)
-		user.save(using=self._db)
-		return user
-
-	def create_superuser(self, email, username, password):
-		user = self.create_user(
-			email=self.normalize_email(email),
-			password=password,
-			username=username,
-		)
-		user.is_admin = True
-		user.is_staff = True
-		user.is_superuser = True
-		user.save(using=self._db)
-		return user
-
-
-'''
 
 class MaterialUsed(models.Model):
     material_name = models.CharField(max_length=100, null=True, blank=True)
@@ -152,23 +123,35 @@ class JobCard(models.Model):
     job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     # job_card_client = models.CharField(max_length=100, null=True, blank=True)
-    job_card_reference = models.CharField(max_length=100, null=True,
-                                          blank=True)  # can include invoice number or PO number
-    job_card_location = models.CharField(max_length=100, null=True, blank=True)  # department
+    job_card_reference = models.CharField(max_length=100, null=True,blank=True)  # can include invoice number or PO number
+    #job_card_location = models.CharField(max_length=100, null=True, blank=True)  # department
     job_card_created_at = models.DateTimeField(auto_now_add=True)
-    job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
+    job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True) #on PUT method
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_technicians = models.ManyToManyField(Employee, blank=True)
-    # job_card_technician = models.CharField(max_length=100, null=True, blank=True)
-    job_card_type = models.CharField(max_length=100, null=True, blank=True)
     job_card_status = models.CharField(max_length=100, null=True, blank=True)
     job_card_description = models.TextField(null=True, blank=True)
-    job_card_priority = models.CharField(max_length=100, null=True, blank=True, default='Normal')
+    priority_type_data = ((1, 'Low'), (2, 'Normal'), (3, 'High'))
+    job_card_priority = models.CharField0(max_length=100, choices=priority_type_data, default=3)
     job_card_resolution = models.TextField(null=True, blank=True)
     job_card_completion_description = models.CharField(max_length=100, null=True, blank=True)
-    job_card_nva_time = models.TimeField(null=True,
-                                         blank=True)  # describes the time in which nothing was done. Will be done in the frontend
-    job_card_requester = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    job_card_nva_time = models.TimeField(null=True, blank=True)  # describes the time in which nothing was done. Will be done in the frontend
+    job_card_requester = models.ForeignKey('ClientUser', on_delete=models.CASCADE, null=True, blank=True)
+    job_category = models.ForeignKey(JobCardCategory, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.job_card_number
+
+class ClientUser(models.Model): #different users in each organization
+    id = models.AutoField(primary_key=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
+    last_name = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField(max_length=100, null=True, blank=True)
+    phone = models.CharField(max_length=100, null=True, blank=True)
+    address = models.CharField(max_length=100, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    department = models.CharField(max_length=100, null=True, blank=True)
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+    
