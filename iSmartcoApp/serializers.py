@@ -1,10 +1,10 @@
-from rest_framework import serializers
-from django.core.mail import EmailMessage
 from django.conf import settings
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+from rest_framework import serializers
 
-from iSmartcoApp.models import JobCard, Employee, Company, Client, User, MaterialUsed, JobCardCategory
-
+from iSmartcoApp.models import (Client, Company, Employee, JobCard,
+                                JobCardCategory, MaterialUsed, User)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -61,9 +61,13 @@ class ClientSerializers(serializers.ModelSerializer):
 
 
 class CompanySerializers(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = '__all__'
+
+	
+	class Meta:
+		model = Company
+		fields = '__all__'
+		
+	
 
 
 class EmployeeSerializers(serializers.ModelSerializer):
@@ -148,15 +152,26 @@ class JobCardSerializers(serializers.ModelSerializer):
 							job_card_requester = validated_data['job_card_requester'],
 							job_category=validated_data['category_id'],
 							job_card_description=validated_data['job_card_description'],
-							job_card_status=validated_data['job_card_status']
 						)
 		job_card.save()
-		return job_card
-
+		return job_card.id, job_card.job_card_company
 
 class JobCardCategory(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = ['category']
 		
+
+
+class UserSerializers(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = '__all__'
+		
+
+	get_company_clients = serializers.SerializerMethodField('get_company_clients_from_User')#try making for all users
+	def get_company_clients_from_User(self, *args, **kwargs):
+		company_id = kwargs.get('company_id', None)
+		user_type = kwargs.get('user_type', None)
+		return User.objects.filter(user_type=user_type, user_company=company_id).count()
 
