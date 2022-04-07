@@ -13,7 +13,7 @@ class MaterialUsed(models.Model):
     material_unit = models.CharField(max_length=100, null=True, blank=True)
     material_price = models.IntegerField(null=True, blank=True)
     material_remarks = models.CharField(max_length=100, null=True, blank=True)
-    material_job = models.ForeignKey('Job', on_delete=models.CASCADE)
+    material_job = models.ForeignKey('JobCard', on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -119,7 +119,7 @@ class Employee(models.Model):
 
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
-    job_card_number = models.IntegerField()  # unique for every company
+    job_card_number = models.IntegerField(null=False, default=0)  # unique for every company
     job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     # job_card_client = models.CharField(max_length=100, null=True, blank=True)
@@ -132,7 +132,7 @@ class JobCard(models.Model):
     job_card_status = models.CharField(max_length=100, null=True, blank=True)
     job_card_description = models.TextField(null=True, blank=True)
     priority_type_data = ((1, 'Low'), (2, 'Normal'), (3, 'High'))
-    job_card_priority = models.CharField0(max_length=100, choices=priority_type_data, default=3)
+    job_card_priority = models.CharField(max_length=100, choices=priority_type_data, default=3)
     job_card_resolution = models.TextField(null=True, blank=True)
     job_card_completion_description = models.CharField(max_length=100, null=True, blank=True)
     job_card_nva_time = models.TimeField(null=True, blank=True)  # describes the time in which nothing was done. Will be done in the frontend

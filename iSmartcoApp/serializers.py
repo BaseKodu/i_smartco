@@ -116,21 +116,21 @@ class JobCardSerializers(serializers.ModelSerializer):
 
 	company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
 	def get_company_name_from_JobCard(self, job_card):
-		return job_card.company.company_name
+		return job_card.job_card_company.name
 
-	get_client_name = serializers.SerializerMethodField('get_client_name_from_Client')
+	client_name = serializers.SerializerMethodField('get_client_name_from_Client')
 	def get_client_name_from_Client(self, job_card):
-		return job_card.client.id
+		return job_card.client.name
 
-	get_employee_name = serializers.SerializerMethodField('get_employee_name_from_Employee')
+	employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
 	def get_employee_name_from_Employee(self, job_card):
-		return job_card.employee.id
+		return job_card.employee.employee_name
 
 
 	class Meta:
 		model = JobCard
 		#fields = '__all__'
-		fields = ['email', 'username', 'password', 'password2', 'company_name']
+		fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
 		extra_kwargs = {
 				'password': {'write_only': True},
 				'company_name': {'write_only': False}
@@ -151,7 +151,6 @@ class JobCardSerializers(serializers.ModelSerializer):
 							job_card_completion_description = validated_data['job_card_completion_description'],
 							job_card_requester = validated_data['job_card_requester'],
 							job_category=validated_data['category_id'],
-							job_card_description=validated_data['job_card_description'],
 						)
 		job_card.save()
 		return job_card.id, job_card.job_card_company
