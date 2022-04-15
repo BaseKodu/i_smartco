@@ -23,26 +23,6 @@ def RegisterApi(request):
 
 
 
-
-
-
-'''
-	if request.method == 'POST':
-		serializer = RegistrationSerializer(data=request.data)
-		data = {}
-		if serializer.is_valid():
-			user = serializer.save()
-			data['response'] = 'successfully registered new user.'
-			data['email'] = user.email
-			data['username'] = user.username
-			status = 201
-		else:
-			data = serializer.errors
-			status = 400
-		return JsonResponse(data, status=status)
-
-'''
-
 @csrf_exempt
 def ClientApi(request):
 	if request.method == 'POST':
