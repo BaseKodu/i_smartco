@@ -23,8 +23,8 @@ class MaterialUsed(models.Model):
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
-    user_type_data = (("sysAdmin", "1"), ("CompAdmin", "2"), ("Client", "3"), ("Employee", "4"))
-    user_type = models.CharField(max_length=10, choices=user_type_data, default="CompAdmin")
+    user_type_data = ((1, "sysAdmin"), (2, "CompAdmin"), (3, "Client"), (4, "Employee"))
+    user_type = models.IntegerField(choices=user_type_data, default=2)
     user_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
     # user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True)
     # if user is CompAdmin then company is the company he belongs to
@@ -101,7 +101,7 @@ class Company(models.Model):
 
 class Employee(models.Model):
     id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    employee_id_num = models.CharField(max_length=13, unique=True)
+    employee_id_num = models.CharField(max_length=13, unique=False)
     employee_name = models.CharField(max_length=50, null=True, blank=True)
     employee_phone = models.CharField(max_length=10, null=True, blank=True)
     employee_address = models.CharField(max_length=100, null=True, blank=True)
@@ -172,3 +172,24 @@ def generateJobCardNumber(company_id):
 		last_job_card_number = JobCard.objects.filter(job_card_company=company_id).count()
 		print("Last Job Card Number: ", last_job_card_number)
 		return last_job_card_number + 1
+
+
+@receiver(post_save, sender=User)
+def createUserType(sender, instance, created, **kwargs):
+    if created:
+        if instance.user_type == 3:
+            Client.objects.create(id=instance) #client
+        elif instance.user_type == 4:
+            Employee.objects.create(id=instance) #employee
+        elif instance.user_type == 2:  
+            Employee.objects.create(id=instance) #company admin
+
+
+@receiver(post_save, sender=User)
+def saveUserType(sender, instance, **kwargs):
+    if instance.user_type == 3:
+        instance.client.save()
+    elif instance.user_type == 4:
+        instance.employee.save()
+    elif instance.user_type == 2:
+        instance.employee.save()

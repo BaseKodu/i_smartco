@@ -17,7 +17,7 @@ def RegisterApi(request):
 		serializer = RegistrationSerializer(data=data)
 		if serializer.is_valid():
 			serializer.save()
-			serializer.post_to_company()
+			#serializer.post_to_company()
 			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

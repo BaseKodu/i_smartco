@@ -16,35 +16,36 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['email', 'username', 'password', 'password2', 'company_name']
+		fields = ['email', 'username', 'password', 'password2', 'company_name', 'user_type']
 		extra_kwargs = {
 				'password': {'write_only': True},
 				'company_name': {'write_only': False}
 		}	
 
-	def post_to_company(self):
-		company = Company(
-						name=self.validated_data['company_name'],
-						user=self.instance,
-						created_by = self.validated_data['email']
-					)
-		company.save()
-
-		
-
 
 	def	save(self):
 
+		company = Company(
+						name=self.validated_data['company_name'],
+						#user=self.instance,
+						created_by = self.validated_data['email']
+					)
+		company.save()
 		user = User(
 					email=self.validated_data['email'],
-					username=self.validated_data['username']
+					username=self.validated_data['username'],
+					user_company=company,
 				)
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
 		if password != password2:
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		user.set_password(password)
+		#user.user_company = company
 		user.save()
+		#CompanyObject = self.post_to_company(user, self.validated_data)
+
+		#compObject = post_to_company(self)
 		return user
 
 		#check denis ivy for payment stuff
