@@ -3,6 +3,8 @@ from statistics import mode
 from tkinter import CASCADE
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 
@@ -154,4 +156,19 @@ class ClientUser(models.Model): #different users in each organization
     department = models.CharField(max_length=100, null=True, blank=True)
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
-    
+
+
+#to create a unique job card number for each company
+@receiver(post_save, sender=JobCard)
+def generateJobNumber(sender, instance, created, **kwargs):
+    # if Created is true (Means Data Inserted)
+    if created:
+        # Getting the last JobCard Number
+        instance.job_card_number = generateJobCardNumber(instance.job_card_company)
+        instance.save()
+
+
+def generateJobCardNumber(company_id):
+		last_job_card_number = JobCard.objects.filter(job_card_company=company_id).count()
+		print("Last Job Card Number: ", last_job_card_number)
+		return last_job_card_number + 1

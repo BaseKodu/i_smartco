@@ -23,6 +23,32 @@ def RegisterApi(request):
 
 
 
+#create job card
+@csrf_exempt
+def JobCardApi(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = JobCardSerializers(data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+	
+	elif request.method == 'GET':
+		job_card = JobCard.objects.all()
+		serializer = JobCardSerializers(job_card, many=True)
+		return JsonResponse(serializer.data, safe=False)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		job_card = JobCard.objects.get(id=data['id'])
+		serializer = JobCardSerializers(job_card, data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data)
+		return JsonResponse(serializer.errors, status=400)
+
+
 @csrf_exempt
 def ClientApi(request):
 	if request.method == 'POST':
@@ -72,32 +98,6 @@ def CompanyApi(request): #could very well prove to be unnecessary
 		return JsonResponse(serializer.errors, status=400)
 
 
-#create job card
-@csrf_exempt
-def JobCardApi(request):
-	if request.method == 'POST':
-		data = JSONParser().parse(request)
-		serializer = JobCardSerializers(data=data)
-		last_job_card_number = serializer.get_last_job_card_number() + 1
-		if serializer.is_valid():
-			serializer.save()
-			serializer.last_job_card_number = last_job_card_number
-			return JsonResponse(serializer.data, status=201)
-		return JsonResponse(serializer.errors, status=400)
-	
-	elif request.method == 'GET':
-		job_card = JobCard.objects.all()
-		serializer = JobCardSerializers(job_card, many=True)
-		return JsonResponse(serializer.data, safe=False)
-
-	elif request.method == 'PUT':
-		data = JSONParser().parse(request)
-		job_card = JobCard.objects.get(id=data['id'])
-		serializer = JobCardSerializers(job_card, data=data)
-		if serializer.is_valid():
-			serializer.save()
-			return JsonResponse(serializer.data)
-		return JsonResponse(serializer.errors, status=400)
 		
 
 #create employee
