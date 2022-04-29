@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'iSmartcoApp',
     'rest_framework',
+    "rest_framework.authtoken",
     #'channels',
     #'notification',
 ]
@@ -59,7 +60,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
-REST_FRAMEWORK = {'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny']}
+REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication',],
+                  'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated',]
+}
+    
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 

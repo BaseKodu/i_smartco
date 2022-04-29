@@ -2,21 +2,68 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
-from rest_framework import status
+from rest_framework import status, permissions, views
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from iSmartcoApp.models import JobCard, Employee, Company, Client, User
-from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers, RegistrationSerializer
+from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers, RegistrationSerializer, LoginSerializer
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import login, logout
+
 
 # Create your views here.
 
+
+#class LoginView(views.APIView):
+    # This view should be accessible also for unauthenticated users.
+
 @csrf_exempt
+def LogoutApi(request):
+	permission_classes = (permissions.IsAuthenticated,)
+	if request.method == 'POST':
+		logout(request)
+		return JsonResponse({'success': 'Logged out'}, status=status.HTTP_200_OK)
+	else:
+		return JsonResponse({'error': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@csrf_exempt
+def LoginApi(request):
+	permission_classes = (permissions.AllowAny,)
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = LoginSerializer(data=data)
+		if serializer.is_valid():
+			user = serializer.validated_data['user']
+			login(request, user)
+			#token, created = Token.objects.get_or_create(user=user)
+			#return JsonResponse({'token': token.key})
+			return JsonResponse(serializer.data, status=status.HTTP_202_ACCEPTED)
+		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+'''
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request, format=None):
+        serializer = LoginSerializer(data=self.request.data, context={ 'request': self.request })
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        return Response(None, status=status.HTTP_202_ACCEPTED)
+'''
+
+@csrf_exempt
+#@permission_classes([AllowAny])
 def RegisterApi(request):
+	permission_classes = (permissions.AllowAny,)
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = RegistrationSerializer(data=data)
 		if serializer.is_valid():
 			serializer.save()
+			#token = Token.objects.get_or_create(user=serializer)[0].key
+			#print(token)
 			serializer.post_to_company()
 			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
 		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -75,13 +122,12 @@ def CompanyApi(request): #could very well prove to be unnecessary
 #create job card
 @csrf_exempt
 def JobCardApi(request):
+	permission_classes = (permissions.IsAuthenticated)
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = JobCardSerializers(data=data)
-		last_job_card_number = serializer.get_last_job_card_number() + 1
 		if serializer.is_valid():
 			serializer.save()
-			serializer.last_job_card_number = last_job_card_number
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	

@@ -2,13 +2,49 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework import serializers
+from django.contrib.auth import authenticate
+
 
 from iSmartcoApp.models import (Client, Company, Employee, JobCard,
                                 JobCardCategory, MaterialUsed, User)
 
 
+class LoginSerializer(serializers.Serializer):
+    """
+    This serializer defines two fields for authentication:
+      * username
+      * password.
+    It will try to authenticate the user with when validated.
+    """
+    username = serializers.CharField(label="Username", write_only=True)
+    password = serializers.CharField(label="Password", style={'input_type': 'password'}, trim_whitespace=False, write_only=True)
+    # This will be used when the DRF browsable API is enabled
+
+    def validate(self, attrs):
+        # Take username and password from request
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        if username and password:
+            # Try to authenticate the user using Django auth framework.
+            user = authenticate(request=self.context.get('request'),
+                                username=username, password=password)
+            if not user:
+                # If we don't have a regular user, raise a ValidationError
+                msg = 'Access denied: User does not exist'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Both "username" and "password" are required.'
+            raise serializers.ValidationError(msg, code='authorization')
+        # We have a valid user, put it in the serializer's validated_data.
+        # It will be used in the view.
+        attrs['user'] = user
+        return attrs
+
+
 class RegistrationSerializer(serializers.ModelSerializer):
 
+	#adding two extra fields
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 	company_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
 
@@ -16,19 +52,18 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		model = User
 		fields = ['email', 'username', 'password', 'password2', 'company_name']
 		extra_kwargs = {
-				'password': {'write_only': True},
+				'password': {'write_only': True}, #dont want anyone to see the password
 				'company_name': {'write_only': False}
 		}	
 
 	def post_to_company(self):
+		#to create a company record when the user creates a profile
 		company = Company(
 						name=self.validated_data['company_name'],
 						user=self.instance,
-						created_by = self.validated_data['email']
+						#created_by = self.validated_data['email']
 					)
 		company.save()
-
-		
 
 
 	def	save(self):
@@ -39,7 +74,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 				)
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
-		if password != password2:
+		if password != password2: #trying to match passwords. Other validation will be done by django automatically
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		user.set_password(password)
 		user.save()
@@ -87,7 +122,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 	
 	
 	#for displaying
-	total_num_of_jobs = serializers.SerializerMethodField('get_total_num_of_jobs')
+	#total_num_of_jobs = serializers.SerializerMethodField('get_total_num_of_jobs')
 	def total_num_of_jobs(self, *args, **kwargs): #test properly when theres a lot of data in the table
 		#some filters wont be added to the query
 		#view jobs by company, employee, client, status, category, date
@@ -103,63 +138,43 @@ class JobCardSerializers(serializers.ModelSerializer):
 
 
 
-	get_job_card_category = serializers.SerializerMethodField('get_job_card_category')
+	#get_job_card_category = serializers.SerializerMethodField('get_job_card_category')
 	def get_job_card_category(self, job_card):
 		company_categories = JobCardCategory.objects.filter(owned_by=job_card.job_card_company)
 		return company_categories.id
 
 
-	get_last_job_card_number = serializers.SerializerMethodField('get_last_job_card_number')
-	def get_last_job_card_number(self, job_card, company_id):#ensures every company gets a unique job card number that isnt id
-		last_job_card_number = JobCard.objects.filter(company_id=company_id).last()
-		return last_job_card_number.job_card_number
 
-	company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
+
+	#company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
 	def get_company_name_from_JobCard(self, job_card):
 		return job_card.job_card_company.name
 
-	client_name = serializers.SerializerMethodField('get_client_name_from_Client')
+	#client_name = serializers.SerializerMethodField('get_client_name_from_Client')
 	def get_client_name_from_Client(self, job_card):
 		return job_card.client.name
 
-	employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
+	#employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
 	def get_employee_name_from_Employee(self, job_card):
 		return job_card.employee.employee_name
 
 
 	class Meta:
 		model = JobCard
-		#fields = '__all__'
-		fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
+		fields = '__all__'
+		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
 		extra_kwargs = {
 				'password': {'write_only': True},
-				'company_name': {'write_only': False}
+				'company_name': {'write_only': False},
+				#'job_card_number': {'read_only': True}
 		}
-
-
-	def post_to_JobCard(self, validated_data):
-		job_card = JobCard(
-							#job_card_number= get_last_job_card_number(job_card), needs to be done on  --> models.py
-							job_card_client=validated_data['client_id'],
-							job_card_company=validated_data['company_id'],
-							job_card_reference = validated_data['reference'],
-							technicians = validated_data['technicians'],
-							job_card_status = validated_data['job_card_status'],
-							job_card_description = validated_data['job_card_description'],
-							job_card_priority = validated_data['job_card_priority'],
-							job_card_resolution = validated_data['job_card_resolution'],
-							job_card_completion_description = validated_data['job_card_completion_description'],
-							job_card_requester = validated_data['job_card_requester'],
-							job_category=validated_data['category_id'],
-						)
-		job_card.save()
-		return job_card.id, job_card.job_card_company
-
+	
+'''
 class JobCardCategory(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = ['category']
-		
+'''	
 
 
 class UserSerializers(serializers.ModelSerializer):

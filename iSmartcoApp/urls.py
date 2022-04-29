@@ -10,5 +10,6 @@ urlpatterns=[
     re_path(r'^CompanyApi$',views.CompanyApi),
     re_path(r'^ClientApi$',views.ClientApi),
     re_path(r'^RegisterApi$', views.RegisterApi),
-
+    re_path(r'^LoginApi$', views.LoginApi), #might need .as_view()
+    re_path(r'^LogoutApi$', views.LogoutApi),
 ]
