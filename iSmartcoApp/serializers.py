@@ -9,6 +9,27 @@ from iSmartcoApp.models import (Client, Company, Employee, JobCard,
                                 JobCardCategory, MaterialUsed, User)
 
 
+
+class UserSerializer(serializers.Serializer):
+	id = serializers.IntegerField(read_only=True)
+	first_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	last_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	email = serializers.EmailField(required=False, allow_blank=True, max_length=100)
+	#username = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	#password = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	is_active = serializers.BooleanField(required=False)
+	#is_staff = serializers.BooleanField(required=False, allow_blank=True)
+	#is_superuser = serializers.BooleanField(required=False, allow_blank=True)
+	#last_login = serializers.DateTimeField(required=False, allow_blank=True)
+	date_joined = serializers.DateTimeField(required=False)
+
+	
+	class Meta:
+		model = User
+		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined']
+	
+
+
 class LoginSerializer(serializers.Serializer):
     """
     This serializer defines two fields for authentication:
