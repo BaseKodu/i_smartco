@@ -6,7 +6,7 @@ from rest_framework import status, permissions, views
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from iSmartcoApp.models import JobCard, Employee, Company, Client, User
-from iSmartcoApp.serializers import JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers, RegistrationSerializer, LoginSerializer
+from iSmartcoApp.serializers import * #JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers, RegistrationSerializer, LoginSerializer, UserSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, logout
 
@@ -16,6 +16,12 @@ from django.contrib.auth import login, logout
 
 #class LoginView(views.APIView):
     # This view should be accessible also for unauthenticated users.
+
+
+@api_view(['GET'])
+def current_user(request):
+	serializer = UserSerialiizer(request.user)
+	return Response(serializer.data)
 
 @csrf_exempt
 def LogoutApi(request):
