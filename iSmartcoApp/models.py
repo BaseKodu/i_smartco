@@ -39,11 +39,7 @@ class MyAccountManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
-<<<<<<< HEAD
-    user_type_data = ((1, "sysAdmin"), (2, "CompAdmin"), (3, "Client"), (4, "Employee"))
-=======
     user_type_data = ((1,"sysAdmin"),(2,"CompAdmin"), (3,"Client"), (4,"Employee"))
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
     user_type = models.IntegerField(choices=user_type_data, default=2)
     user_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
     #user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True)
@@ -171,43 +167,6 @@ class ClientUser(models.Model): #different users in each organization
         return f'{self.first_name} {self.last_name}'
 
 
-<<<<<<< HEAD
-#to create a unique job card number for each company
-@receiver(post_save, sender=JobCard)
-def generateJobNumber(sender, instance, created, **kwargs):
-    # if Created is true (Means Data Inserted)
-    if created:
-        # Getting the last JobCard Number
-        instance.job_card_number = generateJobCardNumber(instance.job_card_company)
-        instance.save()
-
-
-def generateJobCardNumber(company_id):
-		last_job_card_number = JobCard.objects.filter(job_card_company=company_id).count()
-		print("Last Job Card Number: ", last_job_card_number)
-		return last_job_card_number + 1
-
-
-@receiver(post_save, sender=User)
-def createUserType(sender, instance, created, **kwargs):
-    if created:
-        if instance.user_type == 3:
-            Client.objects.create(id=instance) #client
-        elif instance.user_type == 4:
-            Employee.objects.create(id=instance) #employee
-        elif instance.user_type == 2:  
-            Employee.objects.create(id=instance) #company admin
-
-
-@receiver(post_save, sender=User)
-def saveUserType(sender, instance, **kwargs):
-    if instance.user_type == 3:
-        instance.client.save()
-    elif instance.user_type == 4:
-        instance.employee.save()
-    elif instance.user_type == 2:
-        instance.employee.save()
-=======
 class MaterialUsed(models.Model):
     material_name = models.CharField(max_length=100, null=True, blank=True)
     material_barcode = models.CharField(max_length=100, null=True, blank=True)	
@@ -273,4 +232,3 @@ def save_user_profile(sender, instance, **kwargs):
     if instance.user_type == 3:
         instance.students.save()
 '''
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5

@@ -2,13 +2,8 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework import serializers
-<<<<<<< HEAD
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-=======
 from django.contrib.auth import authenticate
 
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 
 from iSmartcoApp.models import (Client, Company, Employee, JobCard,
                                 JobCardCategory, MaterialUsed, User)
@@ -82,17 +77,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 				'company_name': {'write_only': False}
 		}	
 
-<<<<<<< HEAD
-
-	def	save(self):
-
-		company = Company(
-						name=self.validated_data['company_name'],
-						#user=self.instance,
-						created_by = self.validated_data['email']
-					)
-		company.save()
-=======
 	def post_to_company(self):
 		#to create a company record when the user creates a profile
 		company = Company(
@@ -105,7 +89,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 	def	save(self):
 
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 		user = User(
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
@@ -201,13 +184,8 @@ class JobCardSerializers(serializers.ModelSerializer):
 		return company_categories.id
 
 
-<<<<<<< HEAD
-	
-
-=======
 
 
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 	#company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
 	def get_company_name_from_JobCard(self, job_card):
 		return job_card.job_card_company#.name
@@ -216,11 +194,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 	def get_client_name_from_Client(self, job_card):
 		return job_card.job_card_client#.name
 
-<<<<<<< HEAD
-	'''employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
-=======
 	#employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 	def get_employee_name_from_Employee(self, job_card):
 		return job_card.job_card_technicians#.employee_name'''
 
@@ -228,42 +202,15 @@ class JobCardSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = '__all__'
-<<<<<<< HEAD
-		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'job_card_client', 'job_card_company']
-=======
 		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
 				'password': {'write_only': True},
 				'company_name': {'write_only': False},
 				#'job_card_number': {'read_only': True}
 		}
-<<<<<<< HEAD
-
-
-	def post_to_job_card(self):
-		job_card = JobCard(
-							job_card_client= self.validated_data['job_card_client'],
-							job_card_company= self.validated_data['job_card_company'],
-							job_card_reference = self.validated_data['job_card_reference'],
-							job_card_technicians = self.validated_data['job_card_technicians'],
-							job_card_status = self.validated_data['job_card_status'],
-							job_card_description = self.validated_data['job_card_description'],
-							job_card_priority = self.validated_data['job_card_priority'],
-							job_card_resolution = self.validated_data['job_card_resolution'],
-							job_card_completion_description = self.validated_data['job_card_completion_description'],
-							job_card_requester = self.validated_data['job_card_requester'],
-							job_category=self.validated_data['category_id']
-							)
-		job_card.save()
-		return job_card
-
-
-=======
 	
 '''
->>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 class JobCardCategory(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
