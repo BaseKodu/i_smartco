@@ -2,15 +2,75 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework import serializers
+<<<<<<< HEAD
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+=======
+from django.contrib.auth import authenticate
+
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 
 from iSmartcoApp.models import (Client, Company, Employee, JobCard,
                                 JobCardCategory, MaterialUsed, User)
 
 
+
+class UserSerializer(serializers.Serializer):
+	id = serializers.IntegerField(read_only=True)
+	first_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	last_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	email = serializers.EmailField(required=False, allow_blank=True, max_length=100)
+	#username = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	#password = serializers.CharField(required=False, allow_blank=True, max_length=100)
+	is_active = serializers.BooleanField(required=False)
+	#is_staff = serializers.BooleanField(required=False, allow_blank=True)
+	#is_superuser = serializers.BooleanField(required=False, allow_blank=True)
+	#last_login = serializers.DateTimeField(required=False, allow_blank=True)
+	date_joined = serializers.DateTimeField(required=False)
+
+	
+	class Meta:
+		model = User
+		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined']
+	
+
+
+class LoginSerializer(serializers.Serializer):
+    """
+    This serializer defines two fields for authentication:
+      * username
+      * password.
+    It will try to authenticate the user with when validated.
+    """
+    username = serializers.CharField(label="Username", write_only=True)
+    password = serializers.CharField(label="Password", style={'input_type': 'password'}, trim_whitespace=False, write_only=True)
+    # This will be used when the DRF browsable API is enabled
+
+    def validate(self, attrs):
+        # Take username and password from request
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        if username and password:
+            # Try to authenticate the user using Django auth framework.
+            user = authenticate(request=self.context.get('request'),
+                                username=username, password=password)
+            if not user:
+                # If we don't have a regular user, raise a ValidationError
+                msg = 'Access denied: User does not exist'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Both "username" and "password" are required.'
+            raise serializers.ValidationError(msg, code='authorization')
+        # We have a valid user, put it in the serializer's validated_data.
+        # It will be used in the view.
+        attrs['user'] = user
+        return attrs
+
+
 class RegistrationSerializer(serializers.ModelSerializer):
 
+	#adding two extra fields
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 	company_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
 
@@ -18,10 +78,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		model = User
 		fields = ['email', 'username', 'password', 'password2', 'company_name', 'user_type']
 		extra_kwargs = {
-				'password': {'write_only': True},
+				'password': {'write_only': True}, #dont want anyone to see the password
 				'company_name': {'write_only': False}
 		}	
 
+<<<<<<< HEAD
 
 	def	save(self):
 
@@ -31,6 +92,20 @@ class RegistrationSerializer(serializers.ModelSerializer):
 						created_by = self.validated_data['email']
 					)
 		company.save()
+=======
+	def post_to_company(self):
+		#to create a company record when the user creates a profile
+		company = Company(
+						name=self.validated_data['company_name'],
+						user=self.instance,
+						#created_by = self.validated_data['email']
+					)
+		company.save()
+
+
+	def	save(self):
+
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 		user = User(
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
@@ -38,7 +113,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 				)
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
-		if password != password2:
+		if password != password2: #trying to match passwords. Other validation will be done by django automatically
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		user.set_password(password)
 		#user.user_company = company
@@ -126,8 +201,13 @@ class JobCardSerializers(serializers.ModelSerializer):
 		return company_categories.id
 
 
+<<<<<<< HEAD
 	
 
+=======
+
+
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 	#company_name = serializers.SerializerMethodField('get_company_name_from_JobCard')	
 	def get_company_name_from_JobCard(self, job_card):
 		return job_card.job_card_company#.name
@@ -136,7 +216,11 @@ class JobCardSerializers(serializers.ModelSerializer):
 	def get_client_name_from_Client(self, job_card):
 		return job_card.job_card_client#.name
 
+<<<<<<< HEAD
 	'''employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
+=======
+	#employee = serializers.SerializerMethodField('get_employee_name_from_Employee')
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 	def get_employee_name_from_Employee(self, job_card):
 		return job_card.job_card_technicians#.employee_name'''
 
@@ -144,12 +228,18 @@ class JobCardSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = '__all__'
+<<<<<<< HEAD
 		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'job_card_client', 'job_card_company']
+=======
+		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
 				'password': {'write_only': True},
-				'company_name': {'write_only': False}
+				'company_name': {'write_only': False},
+				#'job_card_number': {'read_only': True}
 		}
+<<<<<<< HEAD
 
 
 	def post_to_job_card(self):
@@ -170,11 +260,15 @@ class JobCardSerializers(serializers.ModelSerializer):
 		return job_card
 
 
+=======
+	
+'''
+>>>>>>> 1f0675eeb3ca43f25ade3f475ac1955f8f836cf5
 class JobCardCategory(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = ['category']
-		
+'''	
 
 
 class UserSerializers(serializers.ModelSerializer):
