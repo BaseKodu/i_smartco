@@ -1,16 +1,15 @@
+from django.contrib.auth import login, logout
+from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
-from django.http.response import JsonResponse
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from iSmartcoApp.models import JobCard, Employee, Company, Client, User
-from iSmartcoApp.serializers import * #JobCardSerializers, EmployeeSerializers, CompanySerializers, ClientSerializers, RegistrationSerializer, LoginSerializer, UserSerializer
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
-from django.contrib.auth import login, logout
-
+from iSmartcoApp.models import Client, Company, Employee, JobCard, User
+from iSmartcoApp.serializers import *
 
 # Create your views here.
 
@@ -96,6 +95,7 @@ def JobCardApi(request):
 
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
 def ClientApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
@@ -115,7 +115,6 @@ def ClientApi(request):
 			serializer.save()
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
-	
 	
 
 

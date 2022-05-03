@@ -79,7 +79,6 @@ class Address(models.Model):
 class Client(models.Model):
     id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=100, null=True, blank=True)
-    email = models.EmailField(max_length=100,null=True, blank=True)
     phone = models.CharField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -111,7 +110,6 @@ class Employee(models.Model):
     employee_designation = models.CharField(max_length=50, null=True, blank=True)
     employee_joining_date = models.DateField(blank=True, null=True)
     employee_leaving_date = models.DateField(blank=True, null=True)
-    employee_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True) #add using signals
     #created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     
     def __str__(self):
@@ -120,11 +118,11 @@ class Employee(models.Model):
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
     job_card_number = models.CharField(max_length=100, null=True, blank=True)#unique for every company
-    job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+    job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True) #job_card_requester might be making this redundant
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     #job_card_client = models.CharField(max_length=100, null=True, blank=True)
     job_card_reference = models.CharField(max_length=100, null=True, blank=True)#can include invoice number or PO number
-    job_card_location = models.CharField(max_length=100, null=True, blank=True) # department
+    job_card_location = models.CharField(max_length=100, null=True , blank=True) # department
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
@@ -181,9 +179,9 @@ class MaterialUsed(models.Model):
         return self.material_name
 
 
-
+#function for creating job card number
 def generateNextJobCardNumber(company_id):
-    nextNum = JobCard.objects.filter(job_card_company=company_id).count()
+    nextNum = JobCard.objects.filter(job_card_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.  
     nextNum += 1
     return nextNum
 
@@ -199,12 +197,13 @@ def create_Job_Card_Number(sender, instance, created, **kwargs):
         instance.save()
 
 
+
 @receiver(post_save, sender=User)
 #Creating a function which will automatically insert data into the Employee or client table
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         if instance.user_type == 3:
-            Client.objects.create(id=instance)
+            Client.objects.create(id=instance, name=instance.first_name)
         elif instance.user_type == 2 or instance.user_type == 4:
             Employee.objects.create(id=instance)
             #created_by = Company.objects.get(created_by=instance.email)
