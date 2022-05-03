@@ -77,41 +77,35 @@ class RegistrationSerializer(serializers.ModelSerializer):
 				'company_name': {'write_only': False}
 		}	
 
-	def post_to_company(self):
-		#to create a company record when the user creates a profile
+	def	save(self):
+
+		#in this save function we will be creating a user and a company record. a user, which by default will be CompAdmin, will get the pk of the company he just created. 
+
+		user = User(
+					#creating a user record. it will record company fk
+					email=self.validated_data['email'],
+					username=self.validated_data['username'],
+					#user_company=self.post_to_company(),
+				)
+
 		company = Company(
+						#creating a company record.
 						name=self.validated_data['company_name'],
 						user=self.instance,
 						#created_by = self.validated_data['email']
 					)
-		company.save()
 
-
-	def	save(self):
-
-		user = User(
-					email=self.validated_data['email'],
-					username=self.validated_data['username'],
-					user_company=company,
-				)
+		#validating the password
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
-		if password != password2: #trying to match passwords. Other validation will be done by django automatically
+		if password != password2: #trying to match passwords. Other validation, ie valid characters, will be done by django automatically
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
-		user.set_password(password)
-		#user.user_company = company
-		user.save()
-		#CompanyObject = self.post_to_company(user, self.validated_data)
-
-		#compObject = post_to_company(self)
+		
+		user.set_password(password) #setting the password
+		company.save() #saving the company
+		user.user_company = company #setting the company fk
+		user.save() #saving the user
 		return user
-
-		#check denis ivy for payment stuff
-		template = render_to_string('templates/email_template.html', {request.user.username})
-		email = EmailMessage('Welcome to iSmartco', 
-							 'Thank you for registering with us.',
-							 settings.EMAIL_HOST_USER,
-							 to=[self.validated_data['email']])
 
 
 
@@ -218,6 +212,7 @@ class JobCardCategory(serializers.ModelSerializer):
 '''	
 
 
+'''
 class UserSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = User
@@ -231,3 +226,4 @@ class UserSerializers(serializers.ModelSerializer):
 		return User.objects.filter(user_type=user_type, user_company=company_id).count()
 
 
+'''
