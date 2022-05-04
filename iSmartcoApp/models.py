@@ -39,7 +39,7 @@ class MyAccountManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
-    user_type_data = ((1,"sysAdmin"),(2,"CompAdmin"), (3,"Client"), (4,"Employee"))
+    user_type_data = ((1,"sysAdmin"),(2,"CompanyAdmin"), (3,"Client"), (4,"Employee"))
     user_type = models.IntegerField(choices=user_type_data, default=2)
     user_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
     #user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True)
@@ -153,7 +153,7 @@ class JobCardCategory(models.Model):
 
 class ClientUser(models.Model): #different users in each organization
     id = models.AutoField(primary_key=True)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    works_for = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, null=True, blank=True)

@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate
 
 from iSmartcoApp.models import (Client, Company, Employee, JobCard,
                                 JobCardCategory, MaterialUsed, User)
+from iSmartcoApp.utils import (getClients)		
+
 
 
 
@@ -120,17 +122,19 @@ class ClientSerializers(serializers.ModelSerializer):
 		fields = ['email', 'username', 'password', 'password2', 'user_type', 'client_name']	
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
-				'user_type': {'read_only': True}	
+				'user_type': {'read_only': True},
 		}
 
+	curr_User_Company = User.user_company #company to be assigned to client can be obtained from current User Company fk.
 	def	save(self):
 		user = User(
 					#creating a user record. it will record company fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
 					user_type = 3,
-					first_name = self.validated_data['client_name'],)
+					first_name = self.validated_data['client_name'])
 
+		user.user_company = self.curr_User_Company
 		#validating the password
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
@@ -191,7 +195,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		fields = '__all__'
-		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']
+		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']/
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
 				'password': {'write_only': True},
@@ -199,27 +203,37 @@ class JobCardSerializers(serializers.ModelSerializer):
 				#'job_card_number': {'read_only': True}
 		}
 	
-	job_card_client = 
+	
+	#I want to restrict users to see to clent info based on their client type. if client_type=1:see all clients. if client_type=2:see only clients that are assigned to them. if client_type=3:see only clients themselves. if client_type=4, see clients.
+	#jc_client = getClients()
+
+	UserType = User.user_type
+	UserCompany = User.user_company
+	objClients = getClients(UserType, UserCompany)
+
 	def save(self):
 		job_card = JobCard(
 							job_card_reference = self.validated_data['job_card_reference'],
 							job_card_status = self.validated_data['job_card_status'],
 							job_card_description = self.validated_data['job_card_description'],
-							job_card_client = self.validated_data['job_card_client'],
 							job_card_technicians = self.validated_data['job_card_technicians'],
 							job_card_company = self.validated_data['job_card_company'],
+							job_card_client = self.validated_data['job_card_client'],
 							job_card_started_at = self.validated_data['job_card_started_at'],
 							job_card_completed_at = self.validated_data['job_card_completed_at'],
 							job_card_priority = self.validated_data['job_card_priority'],
 							job_card_category = self.validated_data['job_card_category'],
 						)
-		job_card.save()
-		return job_card
+		
+		#validating if user can see client data
+		job_card_client = self.validated_data['job_card_client']
+		try :
+			if self.UserType ==2 or self.UserType ==4 and job_card_client in self.objClients: # if user_type is compadmin and employee they shoulb be able to see all company clients
+				job_card.job_card_client = self.validated_data['job_card_client']
+			elif self.UserType ==3 and job_card_client == self.objClients:
+				job_card.job_card_client = self.validated_data['job_card_client']
+			job_card.save() #saving the job_card
+			return job_card
+		except :
+			raise serializers.ValidationError({'job_card_client': 'You are not authorized to create a job card for client.'})
 
-
-
-class CommonMiddleware:
-
-	def getClientList(self, request):
-		client_list = User.objects.filter(user_type=3, company_id = User.user_company)
-		return client_list
