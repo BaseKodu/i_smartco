@@ -167,15 +167,33 @@ class CompanySerializers(serializers.ModelSerializer):
 
 class EmployeeSerializers(serializers.ModelSerializer):
 
-	get_total_employees = serializers.SerializerMethodField('get_total_employees')
-	def get_total_employees(self, *args, **kwargs):
-		employee_company = kwargs.get('employee_company', None)
-		return Employee.objects.filter(employee_company= employee_company).count()
-
+	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
 
 	class Meta:
 		model = Employee
 		fields = '__all__'
+		extra_kwargs = {
+				'password': {'write_only': True}, #dont want anyone to see the password
+				'user_type': {'read_only': True},
+		}
+
+	def	save(self):
+		user = Employee(
+					#creating a user record. it will record employee fk
+					email=self.validated_data['email'],
+					username=self.validated_data['username'],
+					user_type = 4,
+					first_name = self.validated_data['employee_name'],)
+		
+		#validating the password
+		password = self.validated_data['password']	
+		password2 = self.validated_data['password2']
+		if password != password2:	#trying to match passwords.
+			raise serializers.ValidationError({'password': 'Passwords must match.'})
+		
+		user.set_password(password) #setting the password
+		user.save() #saving the user
 
 	
 
