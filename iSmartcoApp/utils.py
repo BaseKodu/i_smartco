@@ -2,6 +2,7 @@ from iSmartcoApp.models import JobCard, Employee, Company, Client, User, Materia
 
 
 
+
 def getClients(UserType,UserCompany):
     #returning clients that certain users are allowed to access
 

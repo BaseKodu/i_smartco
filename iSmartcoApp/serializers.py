@@ -3,6 +3,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.contrib.auth import get_user, get_user_model
 
 
 from iSmartcoApp.models import (Client, Company, Employee, JobCard,
@@ -24,11 +25,15 @@ class UserSerializer(serializers.Serializer):
 	#is_superuser = serializers.BooleanField(required=False, allow_blank=True)
 	#last_login = serializers.DateTimeField(required=False, allow_blank=True)
 	date_joined = serializers.DateTimeField(required=False)
+	user_company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False)
 
 	
 	class Meta:
 		model = User
-		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined']
+		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company']
+
+	def getCurrentUser(self):
+		return self.context['request'].user
 	
 
 
@@ -109,7 +114,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		user.save() #saving the user
 		return user
 
-
+#curr_User_Company = User.user_company.id
 
 class ClientSerializers(serializers.ModelSerializer):
 
@@ -125,20 +130,22 @@ class ClientSerializers(serializers.ModelSerializer):
 				'user_type': {'read_only': True},
 		}
 
-	curr_User_Company = User.user_company #company to be assigned to client can be obtained from current User Company fk.
+	
 	def	save(self):
 		user = User(
 					#creating a user record. it will record company fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
 					user_type = 3,
-					first_name = self.validated_data['client_name'])
+					first_name = self.validated_data['client_name'],)
+					#user_company = get_user(self.request).user_company)
+					
 
-		user.user_company = self.curr_User_Company
+		
 		#validating the password
 		password = self.validated_data['password']
 		password2 = self.validated_data['password2']
-		if password != password2:	#trying to match passwords. Other validation, ie valid characters, will be done by django automatically
+		if password != password2:	#trying to match passwords.
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		
 		user.set_password(password) #setting the password
@@ -209,6 +216,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 
 	UserType = User.user_type
 	UserCompany = User.user_company
+	print(f'UserCompany is {UserCompany}')
 	objClients = getClients(UserType, UserCompany)
 
 	def save(self):
