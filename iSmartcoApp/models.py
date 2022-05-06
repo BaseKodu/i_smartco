@@ -179,13 +179,15 @@ class MaterialUsed(models.Model):
         return self.material_name
 
 
-#function for creating job card number
-def generateNextJobCardNumber(company_id):
-    nextNum = JobCard.objects.filter(job_card_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.  
-    nextNum += 1
-    return nextNum
 
 
+from iSmartcoApp.utils import generateNextClientNumber
+
+@receiver(post_save, sender=Client)
+def create_client_number(sender, instance, created, **kwargs):
+    if created:
+        instance.client_number = generateNextClientNumber(company_id = instance.job_card_company.id)
+        instance.save()
 
 @receiver(post_save, sender=JobCard)
 # Now Creating a Function which will automatically insert data into the JobCard table

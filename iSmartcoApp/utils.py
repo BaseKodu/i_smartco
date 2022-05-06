@@ -2,6 +2,24 @@ from iSmartcoApp.models import JobCard, Employee, Company, Client, User, Materia
 
 
 
+#function for creating job card number
+def generateNextJobCardNumber(company_id):
+    nextNum = JobCard.objects.filter(job_card_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.  
+    nextNum += 1
+    return nextNum
+
+def generateNextClientNumber(company_id):
+    nextNum = Client.objects.filter(client_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.
+    nextNum += 1
+    return nextNum
+
+
+def generateNextEmployeeNumber(company_id):
+    nextNum = Employee.objects.filter(employee_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.
+    nextNum +=1
+    return nextNum
+
+
 
 def getClients(UserType,UserCompany):
     #returning clients that certain users are allowed to access
