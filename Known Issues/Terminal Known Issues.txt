@@ -1,0 +1,1 @@
+when calling iSmartcoApp/views/: condition `if serializer.is_valid()` of method EmployeeApi it returns a key error: Groups. The inormation records in the database though, which means that the program runs hust as it should. 

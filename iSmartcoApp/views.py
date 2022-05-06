@@ -56,6 +56,7 @@ def RegisterApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = RegistrationSerializer(data=data)
+		serializer.company_name 
 		if serializer.is_valid():
 			serializer.save()
 			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
@@ -98,7 +99,8 @@ def ClientApi(request):
 		data = JSONParser().parse(request)
 		serializer = ClientSerializers(data=data)
 		if serializer.is_valid():
-			serializer.save()
+			#serializer.data['user_company'] = user_company
+			serializer.save(current_user = request.user)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	elif request.method == 'GET':
@@ -110,13 +112,14 @@ def ClientApi(request):
 		serializer = ClientSerializers(data=data)
 		if serializer.is_valid():
 			serializer.save()
-			return JsonResponse(serializer.data, status=201)
+			return JsonResponse(serializer.data, status=201) #Warning : serializer.data does not return user_company value. It return null although it it recorded in the database
 		return JsonResponse(serializer.errors, status=400)
 	
 
 
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
 def CompanyApi(request): #could very well prove to be unnecessary
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
@@ -144,12 +147,13 @@ def CompanyApi(request): #could very well prove to be unnecessary
 
 #create employee
 @csrf_exempt
+@permission_classes([IsAuthenticated])
 def EmployeeApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = EmployeeSerializers(data=data)
-		if serializer.is_valid():
-			serializer.save()
+		if serializer.is_valid():# raises key error: Groups but records the data in the database. Written in known issues
+			serializer.save(current_user = request.user)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	

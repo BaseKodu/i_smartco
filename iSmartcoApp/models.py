@@ -151,7 +151,7 @@ class JobCardCategory(models.Model):
         return self.name
 
 
-class ClientUser(models.Model): #different users in each organization
+class ClientUser(models.Model): #different users in each organization. They request jobs in the organization   
     id = models.AutoField(primary_key=True)
     works_for = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)

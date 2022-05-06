@@ -31,9 +31,6 @@ class UserSerializer(serializers.Serializer):
 	class Meta:
 		model = User
 		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company']
-
-	def getCurrentUser(self):
-		return self.context['request'].user
 	
 
 
@@ -124,21 +121,23 @@ class ClientSerializers(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['email', 'username', 'password', 'password2', 'user_type', 'client_name']	
+		fields = ['email', 'username', 'password', 'password2', 'user_type', 'client_name', 'user_company']	
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
+				'user_company': {'read_only': True},
 		}
 
 	
-	def	save(self):
+	def	save(self, current_user):
+		usr_comp = current_user.user_company
 		user = User(
 					#creating a user record. it will record company fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
 					user_type = 3,
-					first_name = self.validated_data['client_name'],)
-					#user_company = get_user(self.request).user_company)
+					first_name = self.validated_data['client_name'],
+					user_company = usr_comp)
 					
 
 		
@@ -160,7 +159,8 @@ class CompanySerializers(serializers.ModelSerializer):
 	
 	class Meta:
 		model = Company
-		fields = '__all__'
+		#fields = '__all__'
+		fields = 'email', 'username', 'password', 'password2', 'user_type', 'employee_name', 'user_company'
 		
 	
 
@@ -171,20 +171,22 @@ class EmployeeSerializers(serializers.ModelSerializer):
 	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
 
 	class Meta:
-		model = Employee
+		model = User
 		fields = '__all__'
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
 		}
 
-	def	save(self):
-		user = Employee(
+	def	save(self, current_user):
+		usr_comp = current_user.user_company #current_user contains the object of logged in user
+		user = User(
 					#creating a user record. it will record employee fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
 					user_type = 4,
-					first_name = self.validated_data['employee_name'],)
+					first_name = self.validated_data['employee_name'],
+					user_company = usr_comp)
 		
 		#validating the password
 		password = self.validated_data['password']	
