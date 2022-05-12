@@ -1,7 +1,8 @@
 from statistics import mode
 from tkinter import CASCADE
-from django.db import models
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -42,11 +43,15 @@ class User(AbstractUser):
     user_type_data = ((1,"sysAdmin"),(2,"CompanyAdmin"), (3,"Client"), (4,"Employee"))
     user_type = models.IntegerField(choices=user_type_data, default=2)
     user_company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
-    #user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True)
     #if user is CompAdmin then company is the company he belongs to
     #if user is Client then company is the company he is serviced by
     #if user is Employee then company is the company he works for
     #if user is sysAdmin then company is null
+    #user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True) # a user can have a lot of addresses
+    #phone = models.CharField(max_length=100, null=True, blank=True) # foreign key. User will have mamy phone numbers
+    user_id_num = models.CharField(max_length=50, unique=False) # for org clients, it will be business reg number
+    designation = models.CharField(max_length=100, null=True, blank=True) # designation is for employees on what role they work on
+    created_by = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -55,6 +60,43 @@ class User(AbstractUser):
 
     def __str__(self):
     	return self.email
+
+
+
+class Phone(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=100)
+    dialing_code = models.CharField(max_length=7)
+    is_active = models.BooleanField(default=True)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.phone_number
+
+'''	
+class Client(models.Model):
+    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    
+    country = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+class Employee(models.Model):
+    #before production, remember to accomodate for users in other countries
+    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    employee_id_num = models.CharField(max_length=13, unique=False)
+    employee_name = models.CharField(max_length=50, null=True, blank=True)
+    employee_phone = models.CharField(max_length=10, null=True, blank=True)
+    employee_address = models.CharField(max_length=100, null=True, blank=True)
+    employee_designation = models.CharField(max_length=50, null=True, blank=True)
+    employee_joining_date = models.DateField(blank=True, null=True)
+    employee_leaving_date = models.DateField(blank=True, null=True)
+    #created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+'''
 
 '''
 	# For checking permissions. to keep it simple all admin have ALL permissons
@@ -67,22 +109,24 @@ class User(AbstractUser):
 '''
 
 class Address(models.Model):
+    buildingNumber = models.CharField(max_length=100, null=True, blank=True)
+    buildingName  = models.CharField(max_length=100, null=True, blank=True)
+    steetNumber = models.CharField(max_length=100, null=True, blank=True)
     street = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    province = models.CharField(max_length=100)
+    province = models.CharField(max_length=100) #another name is state
     zip = models.CharField(max_length=100)
-    country = models.CharField(max_length=100, null=True, blank=True, default='South Africa')
+    country = models.CharField(max_length = 100, null=True, blank=True)
     belongs_to = models.ManyToManyField(User, blank=True)
+    is_primary = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_update = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class Client(models.Model):
-    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    name = models.CharField(max_length=100, null=True, blank=True)
-    phone = models.CharField(max_length=100, null=True, blank=True)
-    country = models.CharField(max_length=100, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+
+
 
     def __str__(self):
         return self.name
@@ -100,34 +144,19 @@ class Company(models.Model):
         return self.name
 
 
-class Employee(models.Model):
-    #before production, remember to accomodate for users in other countries
-    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    employee_id_num = models.CharField(max_length=13, unique=False)
-    employee_name = models.CharField(max_length=50, null=True, blank=True)
-    employee_phone = models.CharField(max_length=10, null=True, blank=True)
-    employee_address = models.CharField(max_length=100, null=True, blank=True)
-    employee_designation = models.CharField(max_length=50, null=True, blank=True)
-    employee_joining_date = models.DateField(blank=True, null=True)
-    employee_leaving_date = models.DateField(blank=True, null=True)
-    #created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    
-    def __str__(self):
-        return self.employee_name
 
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
     job_card_number = models.CharField(max_length=100, null=True, blank=True)#unique for every company
-    job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True) #job_card_requester might be making this redundant
+    job_card_client = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True, related_name='job_card_client')
+    #job_card_client = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) #job_card_requester might be making this redundant
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
-    #job_card_client = models.CharField(max_length=100, null=True, blank=True)
     job_card_reference = models.CharField(max_length=100, null=True, blank=True)#can include invoice number or PO number
     job_card_location = models.CharField(max_length=100, null=True , blank=True) # department
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    job_card_technicians = models.ManyToManyField(Employee, blank=True)
-    #job_card_technician = models.CharField(max_length=100, null=True, blank=True)
+    job_card_technicians = models.ManyToManyField(User, blank=True, related_name='job_card_technicians')
     job_card_type = models.CharField(max_length=100, null=True, blank=True)
     job_card_status = models.CharField(max_length=100, null=True, blank=True)
     job_card_description = models.TextField(null=True, blank=True)
@@ -153,7 +182,7 @@ class JobCardCategory(models.Model):
 
 class ClientUser(models.Model): #different users in each organization. They request jobs in the organization   
     id = models.AutoField(primary_key=True)
-    works_for = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+    works_for = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, null=True, blank=True)
@@ -180,8 +209,13 @@ class MaterialUsed(models.Model):
 
 
 
+'''
+from iSmartcoApp.utils import (generateNextClientNumber,
+                               generateNextEmployeeNumber,
+                               generateNextJobCardNumber)
 
-from iSmartcoApp.utils import generateNextClientNumber
+
+@receiver(post_save, sender=User)
 
 @receiver(post_save, sender=Client)
 def create_client_number(sender, instance, created, **kwargs):
@@ -198,21 +232,21 @@ def create_Job_Card_Number(sender, instance, created, **kwargs):
         instance.job_card_number = nextNum
         instance.save()
 
-
-
+'''
+'''
 @receiver(post_save, sender=User)
 #Creating a function which will automatically insert data into the Employee or client table
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         if instance.user_type == 3:
-            Client.objects.create(id=instance, name=instance.first_name)
+            User.objects.create(id=instance, name=instance.first_name)
         elif instance.user_type == 2 or instance.user_type == 4:
             Employee.objects.create(id=instance)
             #created_by = Company.objects.get(created_by=instance.email)
         elif instance.user_type == 1:
             pass
-
-
+'''
+'''
 @receiver(post_save, sender=User)
 #creating a finction to save the data into in the instance
 def save_user_profile(sender, instance, **kwargs):
@@ -222,7 +256,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.employee.save()
     elif instance.user_type == 1:
         pass
-
+'''
 '''
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):

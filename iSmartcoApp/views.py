@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from iSmartcoApp.models import Client, Company, Employee, JobCard, User
+from iSmartcoApp.models import Company, JobCard, User
 from iSmartcoApp.serializers import *
 
 # Create your views here.
@@ -56,7 +56,6 @@ def RegisterApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = RegistrationSerializer(data=data)
-		serializer.company_name 
 		if serializer.is_valid():
 			serializer.save()
 			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
@@ -73,7 +72,7 @@ def JobCardApi(request):
 		data = JSONParser().parse(request)
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.save()
+			serializer.save(current_user=request.user)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	

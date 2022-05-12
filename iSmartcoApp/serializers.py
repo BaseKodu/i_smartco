@@ -6,9 +6,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user, get_user_model
 
 
-from iSmartcoApp.models import (Client, Company, Employee, JobCard,
+from iSmartcoApp.models import (Company, JobCard,
                                 JobCardCategory, MaterialUsed, User)
-from iSmartcoApp.utils import (getClients)		
 
 
 
@@ -95,7 +94,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		company = Company(
 						#creating a company record.
 						name=self.validated_data['company_name'],
-						user=self.instance,
+						#user=self.instance,
 						#created_by = self.validated_data['email']
 					)
 
@@ -107,7 +106,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		
 		user.set_password(password) #setting the password
 		company.save() #saving the company
-		user.user_company = company #setting the company fk
+		user.user_company = company #setting the company fk on the user table
 		user.save() #saving the user
 		return user
 
@@ -125,7 +124,6 @@ class ClientSerializers(serializers.ModelSerializer):
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
-				'user_company': {'read_only': True},
 		}
 
 	
@@ -160,7 +158,7 @@ class CompanySerializers(serializers.ModelSerializer):
 	class Meta:
 		model = Company
 		#fields = '__all__'
-		fields = 'email', 'username', 'password', 'password2', 'user_type', 'employee_name', 'user_company'
+		fields = ['email', 'username', 'password', 'password2', 'user_type', 'employee_name', 'user_company']
 		
 	
 
@@ -186,7 +184,8 @@ class EmployeeSerializers(serializers.ModelSerializer):
 					username=self.validated_data['username'],
 					user_type = 4,
 					first_name = self.validated_data['employee_name'],
-					user_company = usr_comp)
+					user_company = usr_comp,
+					created_by = current_user.id)
 		
 		#validating the password
 		password = self.validated_data['password']	
@@ -198,6 +197,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 		user.save() #saving the user
 
 	
+from iSmartcoApp.utils import (getClients, generateNextJobCardNumber)		
 
 class JobCardSerializers(serializers.ModelSerializer):
 	
@@ -221,47 +221,61 @@ class JobCardSerializers(serializers.ModelSerializer):
 
 	class Meta:
 		model = JobCard
-		fields = '__all__'
-		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']/
+		#fields = '__all__'
+		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client']
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
-				'password': {'write_only': True},
-				'company_name': {'write_only': False},
-				#'job_card_number': {'read_only': True}
 		}
 	
 	
 	#I want to restrict users to see to clent info based on their client type. if client_type=1:see all clients. if client_type=2:see only clients that are assigned to them. if client_type=3:see only clients themselves. if client_type=4, see clients.
 	#jc_client = getClients()
 
-	UserType = User.user_type
-	UserCompany = User.user_company
-	print(f'UserCompany is {UserCompany}')
-	objClients = getClients(UserType, UserCompany)
 
-	def save(self):
+	#print(f'UserCompany is {UserCompany}')
+	
+
+
+	def save(self, current_user):
 		job_card = JobCard(
 							job_card_reference = self.validated_data['job_card_reference'],
-							job_card_status = self.validated_data['job_card_status'],
 							job_card_description = self.validated_data['job_card_description'],
-							job_card_technicians = self.validated_data['job_card_technicians'],
-							job_card_company = self.validated_data['job_card_company'],
-							job_card_client = self.validated_data['job_card_client'],
-							job_card_started_at = self.validated_data['job_card_started_at'],
-							job_card_completed_at = self.validated_data['job_card_completed_at'],
-							job_card_priority = self.validated_data['job_card_priority'],
-							job_card_category = self.validated_data['job_card_category'],
 						)
 		
-		#validating if user can see client data
-		job_card_client = self.validated_data['job_card_client']
-		try :
-			if self.UserType ==2 or self.UserType ==4 and job_card_client in self.objClients: # if user_type is compadmin and employee they shoulb be able to see all company clients
-				job_card.job_card_client = self.validated_data['job_card_client']
-			elif self.UserType ==3 and job_card_client == self.objClients:
-				job_card.job_card_client = self.validated_data['job_card_client']
-			job_card.save() #saving the job_card
-			return job_card
-		except :
-			raise serializers.ValidationError({'job_card_client': 'You are not authorized to create a job card for client.'})
+		#Extract the usertype and user company from the current user and assign them to objClients, which will return a list of clients you can work with
+		UserType = current_user.user_type
+		UserCompany = current_user.user_company
+		user_id = current_user.id
+		objClients = getClients(UserType, UserCompany, user_id)
+		print(f'objClients is {objClients} \n UserType is {UserType} \n UserCompany is {UserCompany} \n user_id is {user_id}')
+
+
+		
+	#Ensuring that the client selects themselves by default
+		if current_user.user_type == 3:
+			job_card_client = current_user
+		elif current_user.user_type == 2 or current_user.user_type==4:
+			job_card_client = self.validated_data['job_card_client']
+		print(f'job_card_client is {job_card_client}')
+		#Ensuring that selected Client is in the list of clients you can work with
+		exists = False
+		for jc in objClients:
+			if jc == job_card_client:
+				exists = True
+				print(f'{job_card_client} is on the list of clients you can work with')
+
+
+		if job_card_client:
+				if exists: #if the client is in the list
+					job_card.job_card_client = job_card_client
+					job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany)
+					job_card.job_card_company = UserCompany # assign the company on the job card
+					job_card.save()
+					return job_card 
+				else:
+					#job_card.delete()
+					raise (serializers.ValidationError({'job_card_client': 'You are not authorized to work on this client.'}))
+		else:
+			raise (serializers.ValidationError({'job_card_client': 'Please select a client.'}))
+
 
