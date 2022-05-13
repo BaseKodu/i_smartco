@@ -7,7 +7,7 @@ from django.contrib.auth import get_user, get_user_model
 
 
 from iSmartcoApp.models import (Company, JobCard,
-                                JobCardCategory, MaterialUsed, User)
+                                JobCardCategory, MaterialUsed, User, ClientUser)
 
 
 
@@ -257,6 +257,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 		elif current_user.user_type == 2 or current_user.user_type==4:
 			job_card_client = self.validated_data['job_card_client']
 		print(f'job_card_client is {job_card_client}')
+
 		#Ensuring that selected Client is in the list of clients you can work with
 		exists = False
 		for jc in objClients:
@@ -277,5 +278,42 @@ class JobCardSerializers(serializers.ModelSerializer):
 					raise (serializers.ValidationError({'job_card_client': 'You are not authorized to work on this client.'}))
 		else:
 			raise (serializers.ValidationError({'job_card_client': 'Please select a client.'}))
+
+
+class ClientUserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = ClientUser
+		fields = ['first_name', 'last_name', 'email', 'department', 'works_for']
+
+	def save(self, current_user):
+		client_user = ClientUser(
+							first_name = self.validated_data['first_name'],
+							last_name = self.validated_data['last_name'],
+							email = self.validated_data['email'],
+							department = self.validated_data['department'],
+							#phone and address youll see later
+		)
+
+		UserType = current_user.user_type
+		UserCompany = current_user.user_company
+		user_id = current_user.id
+		objClients = getClients(UserType, UserCompany, user_id)
+		print(f'objClients is {objClients} \nUserType is {UserType} \nUserCompany is {UserCompany} \nuser_id is {user_id}')
+
+
+		
+	#Ensuring that the client selects themselves by default
+		if current_user.user_type == 3:
+			client_user.works_for = current_user
+		elif current_user.user_type == 2 or current_user.user_type==4:
+			client = self.validated_data['client']
+		
+
+		
+
+
+		client_user.save()
+		return client_user
+
 
 
