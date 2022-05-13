@@ -109,6 +109,7 @@ class Employee(models.Model):
 '''
 
 class Address(models.Model):
+    id = models.AutoField(primary_key=True)
     buildingNumber = models.CharField(max_length=100, null=True, blank=True)
     buildingName  = models.CharField(max_length=100, null=True, blank=True)
     steetNumber = models.CharField(max_length=100, null=True, blank=True)

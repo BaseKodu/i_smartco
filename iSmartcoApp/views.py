@@ -169,3 +169,5 @@ def EmployeeApi(request):
 			serializer.save()
 			return JsonResponse(serializer.data)
 		return JsonResponse(serializer.errors, status=400)
+
+
