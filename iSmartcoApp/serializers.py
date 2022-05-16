@@ -25,11 +25,12 @@ class UserSerializer(serializers.Serializer):
 	#last_login = serializers.DateTimeField(required=False, allow_blank=True)
 	date_joined = serializers.DateTimeField(required=False)
 	user_company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False)
+	user_type = serializers.IntegerField(required=False)
 
 	
 	class Meta:
 		model = User
-		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company']
+		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company', 'user_type']
 	
 
 
@@ -263,7 +264,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 		for jc in objClients:
 			if jc == job_card_client:
 				exists = True
-				print(f'{job_card_client} is on the list of clients you can work with')
+				#print(f'{job_card_client} is on the list of clients you can work with')
 
 
 		if job_card_client:
@@ -302,18 +303,26 @@ class ClientUserSerializer(serializers.ModelSerializer):
 
 
 		
-	#Ensuring that the client selects themselves by default
+		#Ensuring that the client selects themselves by default
+		client = self.validated_data['works_for']
 		if current_user.user_type == 3:
-			client_user.works_for = current_user
+			client = current_user
 		elif current_user.user_type == 2 or current_user.user_type==4:
-			client = self.validated_data['client']
-		
+			client = self.validated_data['works_for']
 
-		
-
-
-		client_user.save()
-		return client_user
-
-
-
+		exists = False
+		for cl in objClients:
+			if cl == client:
+				exists = True
+				print(f'{client} is on the list of clients you can work with')
+	
+		if client:
+			if exists:
+				client_user.works_for = client
+				client_user.save()
+				return client_user
+			else:
+				#client_user.delete()
+				raise (serializers.ValidationError({'client': 'You are not authorized to work on this client.'}))
+		else:
+			raise (serializers.ValidationError({'client': 'Please select a client.'}))

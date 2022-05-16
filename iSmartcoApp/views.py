@@ -171,3 +171,15 @@ def EmployeeApi(request):
 		return JsonResponse(serializer.errors, status=400)
 
 
+
+#@api_view(['POST'])
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+def create_client_user(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = ClientUserSerializer(data=data)
+		if serializer.is_valid():
+			serializer.save(current_user = request.user)
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
