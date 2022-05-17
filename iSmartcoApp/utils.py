@@ -1,4 +1,4 @@
-from iSmartcoApp.models import JobCard,  Company, User, MaterialUsed, JobCardCategory
+from iSmartcoApp.models import JobCard,  Company, User, MaterialUsed, JobCardCategory, ClientUser
 
 ''' for circular import error use this although with ready(). You'll read up more info on that
 from django.apps import apps
@@ -39,6 +39,19 @@ def getClients(UserType,UserCompany, user_id):
         clients = User.objects.filter(id=user_id)#only able to see themselves
     
     return clients
+
+def getClientUsers(Client):
+    clientUsers = ClientUser.objects.filter(works_for=Client)
+    return clientUsers
+
+
+def Check_if_object_exists(objectList, valueToCheck): #returns boolean
+    #return true if valueToCheck is in objectList
+    #return false if valueToCheck is not in objectList
+    for object in objectList:
+        if valueToCheck == object:
+            return True
+    return False
 
 
 def listOfCountries():

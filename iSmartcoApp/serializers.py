@@ -198,7 +198,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 		user.save() #saving the user
 
 	
-from iSmartcoApp.utils import (getClients, generateNextJobCardNumber)		
+from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists)		
 
 class JobCardSerializers(serializers.ModelSerializer):
 	
@@ -223,7 +223,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		#fields = '__all__'
-		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client']
+		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client', 'job_card_requester']
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
 		}
@@ -249,9 +249,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 		user_id = current_user.id
 		objClients = getClients(UserType, UserCompany, user_id)
 		print(f'objClients is {objClients} \n UserType is {UserType} \n UserCompany is {UserCompany} \n user_id is {user_id}')
-
-
-		
+	
 	#Ensuring that the client selects themselves by default
 		if current_user.user_type == 3:
 			job_card_client = current_user
@@ -260,20 +258,29 @@ class JobCardSerializers(serializers.ModelSerializer):
 		print(f'job_card_client is {job_card_client}')
 
 		#Ensuring that selected Client is in the list of clients you can work with
-		exists = False
-		for jc in objClients:
-			if jc == job_card_client:
-				exists = True
-				#print(f'{job_card_client} is on the list of clients you can work with')
+		Client_exists = Check_if_object_exists(objClients, job_card_client)
+		#for jc in objClients:
+		#	if jc == job_card_client:
+		#		Client_exists = True
+		#		#print(f'{job_card_client} is on the list of clients you can work with')
+
 
 
 		if job_card_client:
-				if exists: #if the client is in the list
-					job_card.job_card_client = job_card_client
-					job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany)
-					job_card.job_card_company = UserCompany # assign the company on the job card
-					job_card.save()
-					return job_card 
+				if Client_exists: #if the client is in the list
+					#Now ensuring that only the right requester can be picked
+					objClientUsers = getClientUsers(job_card_client)
+					job_card_requester = self.validated_data['job_card_requester']
+					clientUserExists = Check_if_object_exists(objClientUsers, job_card_requester)
+					if clientUserExists:
+						job_card.job_card_requester = job_card_requester
+						job_card.job_card_client = job_card_client
+						job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany)
+						job_card.job_card_company = UserCompany # assign the company on the job card
+						job_card.save()
+						return job_card 
+					else:
+						raise serializers.ValidationError({'job_card_requester': 'You are not allowed to work on this client User.'})
 				else:
 					#job_card.delete()
 					raise (serializers.ValidationError({'job_card_client': 'You are not authorized to work on this client.'}))
@@ -323,6 +330,6 @@ class ClientUserSerializer(serializers.ModelSerializer):
 				return client_user
 			else:
 				#client_user.delete()
-				raise (serializers.ValidationError({'client': 'You are not authorized to work on this client.'}))
+				raise (serializers.ValidationError(detail={'client': 'You are not authorized to work on this client.'}, code = 400))
 		else:
-			raise (serializers.ValidationError({'client': 'Please select a client.'}))
+			raise (serializers.ValidationError(detail={'client': 'Please select a client.'}, code = 400))
