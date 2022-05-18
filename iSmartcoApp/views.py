@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from iSmartcoApp.models import Company, JobCard, User
+from iSmartcoApp.models import Company, JobCard, JobCardCategory, User
 from iSmartcoApp.serializers import *
 
 # Create your views here.
@@ -16,6 +16,8 @@ from iSmartcoApp.serializers import *
 
 #class LoginView(views.APIView):
     # This view should be accessible also for unauthenticated users.
+
+
 
 
 @api_view(['GET'])
@@ -179,6 +181,33 @@ def create_client_user(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
 		serializer = ClientUserSerializer(data=data)
+		if serializer.is_valid():
+			serializer.save(current_user = request.user)
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+
+
+
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+def JobCardCategoryApi(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = JobCardCategorySerializer(data=data)
+		if serializer.is_valid():
+			serializer.save(current_user = request.user)
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+
+	elif request.method == 'GET':
+		job_card_category = JobCardCategory.objects.all()
+		serializer = JobCardCategorySerializer(job_card_category, many=True)
+		return JsonResponse(serializer.data, safe=False)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		job_card_category = JobCardCategory.objects.get(id=data['id'])
+		serializer = JobCardCategorySerializer(job_card_category, data=data)
 		if serializer.is_valid():
 			serializer.save(current_user = request.user)
 			return JsonResponse(serializer.data, status=201)

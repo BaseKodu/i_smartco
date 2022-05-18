@@ -14,4 +14,5 @@ urlpatterns=[
     re_path(r'^LogoutApi$', views.LogoutApi),
     re_path(r'^current_user$', views.current_user),
     re_path(r'^create_client_user$', views.create_client_user),
+    re_path(r'^JobCardCategoryApi$', views.JobCardCategoryApi),
 ]

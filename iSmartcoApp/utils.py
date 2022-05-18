@@ -1,5 +1,6 @@
 from iSmartcoApp.models import JobCard,  Company, User, MaterialUsed, JobCardCategory, ClientUser
-
+from iSmartcoApp.constants import GENERAL_COMPANY
+from django.db.models import Q
 ''' for circular import error use this although with ready(). You'll read up more info on that
 from django.apps import apps
 JobCard = apps.get_model('iSmartcoApp', 'JobCard')
@@ -25,6 +26,12 @@ def generateNextEmployeeNumber(company_id):
     return nextNum
 
 '''
+
+def getJobCardCategories(UserCompany):
+    categories = JobCardCategory.objects.filter(Q(company_owner=GENERAL_COMPANY) | Q(company_owner=UserCompany))
+    #categories = Q(JobCardCategory__company_owner=GENERAL_COMPANY) | Q(JobCardCategory__company_owner=UserCompany)
+    #categories.append(JobCardCategory.objects.filter(company_owner=GENERAL_COMPANY))
+    return categories
 
 def getClients(UserType,UserCompany, user_id):
     #returning clients that certain users are allowed to access

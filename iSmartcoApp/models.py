@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from pytz import timezone
 
 
 '''
@@ -140,6 +141,7 @@ class Company(models.Model):
     email = models.CharField(max_length=255, null=True, blank=True)
     website = models.CharField(max_length=255, null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     def __str__(self):
         return self.name
@@ -157,11 +159,12 @@ class JobCard(models.Model):
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    job_card_technicians = models.ManyToManyField(User, blank=True, related_name='job_card_technicians')
-    job_card_type = models.CharField(max_length=100, null=True, blank=True)
+    job_card_employees = models.ManyToManyField(User, blank=True, related_name='job_card_technicians')
+    job_card_category = models.ForeignKey('JobCardCategory', on_delete=models.CASCADE, null=True, blank=True)
     job_card_status = models.CharField(max_length=100, null=True, blank=True)
     job_card_description = models.TextField(null=True, blank=True)
-    job_card_priority = models.CharField(max_length=100, null=True, blank=True, default='Normal')
+    priotiry_data = ((1,'Low'), (2,'Normal'), (3,'High'))
+    job_card_priority = models.CharField(max_length=100, choices=priotiry_data, default=1)
     job_card_resolution = models.TextField(null=True, blank=True)
     job_card_completion_description = models.CharField(max_length=100, null =True, blank=True)
     job_card_nva_time = models.TimeField(null=True, blank=True)#describes the time in which nothing was done. Will be done in the frontend
@@ -172,13 +175,16 @@ class JobCard(models.Model):
 
 
 class JobCardCategory(models.Model):
+    id = models.AutoField(primary_key=True)
+    company_owner = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True) #to show which company owns this category
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-    owned_by = models.ManyToManyField('Company', blank=True)
+    #owned_by = models.ManyToManyField('Company', blank=True)
     def __str__(self):
         return self.name
+
 
 
 class ClientUser(models.Model): #different users in each organization. They request jobs in the organization   
@@ -191,6 +197,8 @@ class ClientUser(models.Model): #different users in each organization. They requ
     address = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     department = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
@@ -204,6 +212,8 @@ class MaterialUsed(models.Model):
     material_remarks = models.CharField(max_length=100, null=True, blank=True)
     material_job = models.ForeignKey('JobCard', on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.material_name
