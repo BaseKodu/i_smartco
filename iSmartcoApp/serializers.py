@@ -116,7 +116,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		user.save() #saving the user
 		return user
 
-#curr_User_Company = User.user_company.id
 
 class ClientSerializers(serializers.ModelSerializer):
 
@@ -172,7 +171,7 @@ class CompanySerializers(serializers.ModelSerializer):
 class EmployeeSerializers(serializers.ModelSerializer):
 
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
+	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=False)
 
 	class Meta:
 		model = User
@@ -191,7 +190,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 					user_type = 4,
 					first_name = self.validated_data['employee_name'],
 					user_company = usr_comp,
-					created_by = current_user.id)
+					created_by = current_user)
 		
 		#validating the password
 		password = self.validated_data['password']	
@@ -203,7 +202,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 		user.save() #saving the user
 
 	
-from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists, getJobCardCategories)		
+from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists, getJobCardCategories, getEmployees)		
 
 class JobCardSerializers(serializers.ModelSerializer):
 	
@@ -228,7 +227,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = JobCard
 		#fields = '__all__'
-		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client', 'job_card_requester','job_card_category']
+		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client', 'job_card_requester','job_card_category', 'job_card_employees']
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
 		}
@@ -239,15 +238,22 @@ class JobCardSerializers(serializers.ModelSerializer):
 		#if client_type=4, see clients. thank you autopilot :)
 
 
-	
+	def start_job(self):
+		#job_card_started_at = self.validated_data['job_card_started_at']
+		#job_card_status = self.validated_data['job_card_status']
+		pass
 
 
 	def save(self, current_user):
 		job_card = JobCard(
 							job_card_reference = self.validated_data['job_card_reference'],
 							job_card_description = self.validated_data['job_card_description'],
+							
 						)
 
+
+		job_card_employees = self.validated_data['job_card_employees'],
+		objEmployees = getEmployees(UserCompany)
 
 		#Extract the usertype and user company from the current user and assign them to objClients, which will return a list of clients you can work with
 		UserType = current_user.user_type
@@ -267,8 +273,23 @@ class JobCardSerializers(serializers.ModelSerializer):
 		Client_exists = Check_if_object_exists(objClients, job_card_client)
 
 
+		employee_exixts = False
+		message = 'All employees are assigned to this job card'
+		job_card_employees = self.validated_data['job_card_employees'],
+		objEmployees = getEmployees(UserCompany)
+		for emp in job_card_employees:
+			if Check_if_object_exists(objEmployees, emp):
+				job_card.job_card_employees.add(emp)
+				employee_exixts = True
+			else:
+				employee_exixts = False
+				message = 'Employee does not exist'
+			
+
+		if not employee_exixts:
+			message = 'One or more employees are not assigned to this job card'
 		
-		
+		list_for_non_existant_employees = []
 
 		#to ensure valid and authorized data is passed and to save the job card object
 		if job_card_client:
@@ -286,14 +307,26 @@ class JobCardSerializers(serializers.ModelSerializer):
 						category = self.validated_data['job_card_category']
 						objCategories = getJobCardCategories(UserCompany)
 						jobCategoryExists = Check_if_object_exists(objCategories, category)
-						if jobCategoryExists or category == None: #to save everything
-							job_card.job_card_category = category
-							job_card.job_card_requester = job_card_requester #assigning the requester
-							job_card.job_card_client = job_card_client #assigning the client
-							job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
-							job_card.job_card_company = UserCompany # assign the company on the job card
-							job_card.save()
-							return job_card 
+						if jobCategoryExists or category == None: 
+							job_card_employees = self.validated_data['job_card_employees'],
+							objEmployees = getEmployees(UserCompany)
+							for emp in job_card_employees:
+								employee_exixts = Check_if_object_exists(objEmployees, emp)
+								if employee_exixts:
+									job_card.job_card_employees.add(emp)
+								else:
+									list_for_non_existant_employees.append(emp) #find a way to let the user know that some people cannot be selected
+							#if len(list_for_non_existant_employees) > 0:
+							#	raise serializers.({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
+							if job_card_employees == None or employee_exixts: #to save everything
+								job_card.job_card_category = category
+								job_card.job_card_requester = job_card_requester #assigning the requester
+								job_card.job_card_client = job_card_client #assigning the client
+								job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
+								job_card.job_card_company = UserCompany # assign the company on the job card
+								job_card.save()
+								return job_card 
+							return serializers.ValidationError({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
 						else:
 							raise serializers.ValidationError({'job_card_category': 'Not a valid category'})
 					else:
@@ -376,4 +409,20 @@ class AddressSerializer(serializers.ModelSerializer):
 		fields = ['buildingNumber', 'buildingName', 'steetNumber', 'street', 'city', 'province', 'zip', 'country', 'belongs_to', 'is_personal', 'is_primary']
 
 	def save(self, current_user):
-		pass
+		address = Address(
+							buildingNumber = self.validated_data['buildingNumber'],
+							buildingName = self.validated_data['buildingName'],
+							steetNumber = self.validated_data['steetNumber'],
+							street = self.validated_data['street'],
+							city = self.validated_data['city'],
+							province = self.validated_data['province'],
+							zip = self.validated_data['zip'],
+							country = self.validated_data['country'],
+							is_personal = self.validated_data['is_personal'],
+							is_primary = self.validated_data['is_primary'],
+							belongs_to = self.validated_data['belongs_to'],
+		)
+
+
+		address.save()
+		return address

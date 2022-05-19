@@ -50,7 +50,7 @@ class User(AbstractUser):
     #if user is sysAdmin then company is null
     #user_address = models.ForeignKey('Address', on_delete=models.CASCADE, null=True, blank=True) # a user can have a lot of addresses
     #phone = models.CharField(max_length=100, null=True, blank=True) # foreign key. User will have mamy phone numbers
-    user_id_num = models.CharField(max_length=50, unique=False) # for org clients, it will be business reg number
+    user_id_num = models.CharField(max_length=50, unique=False, null = True, blank=True) # for org clients, it will be business reg number
     designation = models.CharField(max_length=100, null=True, blank=True) # designation is for employees on what role they work on
     created_by = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True)
 
@@ -114,12 +114,13 @@ class Address(models.Model):
     buildingNumber = models.CharField(max_length=100, null=True, blank=True)
     buildingName  = models.CharField(max_length=100, null=True, blank=True)
     steetNumber = models.CharField(max_length=100, null=True, blank=True)
-    street = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
-    province = models.CharField(max_length=100) #another name is state
-    zip = models.CharField(max_length=100)
+    street = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    province = models.CharField(max_length=100, null=True, blank=True) #another name is state
+    zip = models.CharField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length = 100, null=True, blank=True)
-    belongs_to = models.ManyToManyField(User, blank=True)
+    belongs_to = models.ManyToManyField(User, null=True, blank=True)
+    is_personal = models.BooleanField(default=False)#if not personal then it is a public address, therefore, anyone can see it
     is_primary = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     last_update = models.DateTimeField(auto_now=True)
@@ -128,10 +129,8 @@ class Address(models.Model):
 
 
 
-
-
     def __str__(self):
-        return self.name
+        return self.buildingNumber + " " + self.buildingName + " " + self.steetNumber + " " + self.city + " " + self.zip
 
 class Company(models.Model):
     id = models.AutoField(primary_key=True)
@@ -147,7 +146,6 @@ class Company(models.Model):
         return self.name
 
 
-
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
     job_card_number = models.CharField(max_length=100, null=True, blank=True)#unique for every company
@@ -159,9 +157,10 @@ class JobCard(models.Model):
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    job_card_employees = models.ManyToManyField(User, blank=True, related_name='job_card_technicians')
+    job_card_employees = models.ManyToManyField(User, blank=True, null=True, related_name='job_card_technicians')
     job_card_category = models.ForeignKey('JobCardCategory', on_delete=models.CASCADE, null=True, blank=True)
-    job_card_status = models.CharField(max_length=100, null=True, blank=True)
+    job_card_status_options = ((1,'New'), (2,'Accepted'), (3,'Travelling to Site'), (4,'In Progress'), (5,'Paused'),  (6,'Completed'), (7,'Cancelled'))
+    job_card_status = models.IntegerField(null=True, blank=True, choices=job_card_status_options, default=1)
     job_card_description = models.TextField(null=True, blank=True)
     priotiry_data = ((1,'Low'), (2,'Normal'), (3,'High'))
     job_card_priority = models.CharField(max_length=100, choices=priotiry_data, default=1)

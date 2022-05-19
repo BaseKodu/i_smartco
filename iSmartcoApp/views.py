@@ -18,6 +18,21 @@ from iSmartcoApp.serializers import *
     # This view should be accessible also for unauthenticated users.
 
 
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+def start_job(request):
+	if request.method == 'PUT':
+		data = JSONParser().parse(request)
+		job_card = JobCard.objects.get(id=data['id'])
+		serializer = JobCardSerializers(job_card, data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
 
 @api_view(['GET'])
@@ -64,8 +79,6 @@ def RegisterApi(request):
 		return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-#create job card
 
 @csrf_exempt
 @permission_classes([IsAuthenticated])
