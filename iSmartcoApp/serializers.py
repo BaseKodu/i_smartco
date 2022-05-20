@@ -163,7 +163,7 @@ class CompanySerializers(serializers.ModelSerializer):
 	class Meta:
 		model = Company
 		#fields = '__all__'
-		fields = ['email', 'username', 'password', 'password2', 'user_type', 'employee_name', 'user_company']
+		fields = ['email', 'username', 'password', 'password2', 'user_type', 'company_name', 'user_company']
 		
 	
 
@@ -175,7 +175,8 @@ class EmployeeSerializers(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = '__all__'
+		#fields = '__all__'
+		fields = ['email', 'username', 'password', 'password2', 'employee_name', 'user_type']
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
@@ -187,10 +188,13 @@ class EmployeeSerializers(serializers.ModelSerializer):
 					#creating a user record. it will record employee fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
-					user_type = 4,
 					first_name = self.validated_data['employee_name'],
 					user_company = usr_comp,
-					created_by = current_user)
+					user_type = 4,
+					created_by = current_user
+					)
+
+		
 		
 		#validating the password
 		password = self.validated_data['password']	
@@ -251,11 +255,8 @@ class JobCardSerializers(serializers.ModelSerializer):
 							
 						)
 
-
-		job_card_employees = self.validated_data['job_card_employees'],
-		objEmployees = getEmployees(UserCompany)
-
 		#Extract the usertype and user company from the current user and assign them to objClients, which will return a list of clients you can work with
+		#youll pass these vales to functions in save or utils
 		UserType = current_user.user_type
 		UserCompany = current_user.user_company
 		user_id = current_user.id
