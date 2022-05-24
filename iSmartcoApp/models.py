@@ -129,8 +129,10 @@ class Address(models.Model):
 
 
 
+
     def __str__(self):
-        return self.buildingNumber + " " + self.buildingName + " " + self.steetNumber + " " + self.city + " " + self.zip
+        return '%s %s %s %s %s %s' % (self.buildingNumber, self.buildingName, self.steetNumber, self.street, self.city, self.belongs_to)
+        #return self.buildingNumber + " " + self.buildingName + " " + self.steetNumber + " " + self.city + " " + self.zip
 
 class Company(models.Model):
     id = models.AutoField(primary_key=True)
@@ -162,15 +164,15 @@ class JobCard(models.Model):
     job_card_status_options = ((1,'New'), (2,'Accepted'), (3,'Travelling to Site'), (4,'In Progress'), (5,'Paused'),  (6,'Completed'), (7,'Cancelled'))
     job_card_status = models.IntegerField(null=True, blank=True, choices=job_card_status_options, default=1)
     job_card_description = models.TextField(null=True, blank=True)
-    priotiry_data = ((1,'Low'), (2,'Normal'), (3,'High'))
-    job_card_priority = models.CharField(max_length=100, choices=priotiry_data, default=1)
+    priotiry_data = [(1,'Low'), (2,'Normal'), (3,'High')]
+    job_card_priority = models.IntegerField(choices=priotiry_data, default=2)
     job_card_resolution = models.TextField(null=True, blank=True)
     job_card_completion_description = models.CharField(max_length=100, null =True, blank=True)
     job_card_nva_time = models.TimeField(null=True, blank=True)#describes the time in which nothing was done. Will be done in the frontend
     job_card_requester = models.ForeignKey('ClientUser', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return self.job_card_number
+        return self.job_card_number or 'No Job Card Number'
 
 
 class JobCardCategory(models.Model):

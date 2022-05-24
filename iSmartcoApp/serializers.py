@@ -2,6 +2,7 @@ from ast import Constant
 from re import S
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.forms import RadioSelect
 from django.template.loader import render_to_string
 from rest_framework import serializers
 from django.contrib.auth import authenticate
@@ -293,47 +294,53 @@ class JobCardSerializers(serializers.ModelSerializer):
 		list_for_non_existant_employees = []
 
 		#to ensure valid and authorized data is passed and to save the job card object
+		print(f'job_card_client is {job_card_client}')
 		if job_card_client:
-				if Client_exists: #if the client is in the list
-					#Now ensuring that only the right requester can be picked
-					objClientUsers = getClientUsers(job_card_client)
-					job_card_requester = self.validated_data['job_card_requester']
-					clientUserExists = Check_if_object_exists(objClientUsers, job_card_requester) #check if the user is in the list of users that can be assigned to the client
-					if clientUserExists or job_card_requester == None:
-						'''
-						To add the job card category to the job card
-						#ensuring that user can only select categories 
-						#assigned to company and Genaral Company
-						# '''
-						category = self.validated_data['job_card_category']
-						objCategories = getJobCardCategories(UserCompany)
-						jobCategoryExists = Check_if_object_exists(objCategories, category)
-						if jobCategoryExists or category == None: 
-							job_card_employees = self.validated_data['job_card_employees'],
-							objEmployees = getEmployees(UserCompany)
+			print(f'job_card_client is {job_card_client}')
+			if Client_exists: #if the client is in the list
+				print('Client_exists is True')
+				#Now ensuring that only the right requester can be picked
+				objClientUsers = getClientUsers(job_card_client)
+				job_card_requester = self.validated_data['job_card_requester']
+				clientUserExists = Check_if_object_exists(objClientUsers, job_card_requester) #check if the user is in the list of users that can be assigned to the client
+				if clientUserExists or job_card_requester == None:
+					print(f'clientUserExists is {clientUserExists}, job_card_requester is {job_card_requester}')
+					'''
+					To add the job card category to the job card
+					#ensuring that user can only select categories 
+					#assigned to company and Genaral Company
+					# '''
+					category = self.validated_data['job_card_category']
+					objCategories = getJobCardCategories(UserCompany)
+					jobCategoryExists = Check_if_object_exists(objCategories, category)
+					if jobCategoryExists or category == None: 
+						print(f'jobCategoryExists is {jobCategoryExists}, category is {category}')
+												#if job_card_employees == None or employee_exixts: #to save everything
+							job_card.job_card_category = category
+							job_card.job_card_requester = job_card_requester #assigning the requester
+							job_card.job_card_client = job_card_client #assigning the client
+							job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
+							job_card.job_card_company = UserCompany # assign the company on the job card
+							job_card.save()
 							for emp in job_card_employees:
 								employee_exixts = Check_if_object_exists(objEmployees, emp)
 								if employee_exixts:
 									job_card.job_card_employees.add(emp)
 								else:
 									list_for_non_existant_employees.append(emp) #find a way to let the user know that some people cannot be selected
-							#if len(list_for_non_existant_employees) > 0:
-							#	raise serializers.({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
-							if job_card_employees == None or employee_exixts: #to save everything
-								job_card.job_card_category = category
-								job_card.job_card_requester = job_card_requester #assigning the requester
-								job_card.job_card_client = job_card_client #assigning the client
-								job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
-								job_card.job_card_company = UserCompany # assign the company on the job card
-								job_card.save()
-								return job_card 
-							return serializers.ValidationError({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
+									job_card_employees = self.validated_data['job_card_employees']
+									objEmployees = getEmployees(UserCompany)
+							job_card.save()
+							return job_card 
+
 						else:
-							raise serializers.ValidationError({'job_card_category': 'Not a valid category'})
+							raise serializers.ValidationError({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
 					else:
-						raise serializers.ValidationError({'job_card_requester': 'You are not allowed to work on this client User.'})
+						raise serializers.ValidationError({'job_card_category': 'Not a valid category'})
 				else:
-					raise (serializers.ValidationError({'job_card_client': 'You are not authorized to work on this client.'}))
+					raise serializers.ValidationError({'job_card_requester': 'You are not allowed to work on this client User.'})
+			else:
+				raise (serializers.ValidationError({'job_card_client': 'You are not authorized to work on this client.'}))
 		else:
 			raise (serializers.ValidationError({'job_card_client': 'Please select a client.'}))
 
