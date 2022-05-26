@@ -1,4 +1,5 @@
 from ast import Constant
+import datetime
 from re import S
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -207,7 +208,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 		user.save() #saving the user
 
 	
-from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists, getJobCardCategories, getEmployees)		
+from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists, getJobCardCategories, getEmployees, job_card_times_and_statuses )		
 
 class JobCardSerializers(serializers.ModelSerializer):
 	
@@ -244,10 +245,22 @@ class JobCardSerializers(serializers.ModelSerializer):
 		#if client_type=4, see clients. thank you autopilot :)
 
 
-	def start_job(self):
-		#job_card_started_at = self.validated_data['job_card_started_at']
-		#job_card_status = self.validated_data['job_card_status']
-		pass
+
+
+		
+	def update(self, instance, action_type):
+		if action_type == 4:
+			instance.job_card_status, instance.job_card_started_at = job_card_times_and_statuses(action_type=action_type)
+		elif action_type == 5:
+			instance.job_card_status, instance.job_card_last_pause = job_card_times_and_statuses(action_type=action_type)
+		elif action_type == 8: #for continue
+			instance.job_card_status, instance.job_card_nva_time = job_card_times_and_statuses(action_type=action_type, job_card_last_pause=instance.job_card_last_pause)
+		elif action_type == 6:
+			instance.job_card_status, instance.job_card_completed_at = job_card_times_and_statuses(action_type=action_type)
+		elif action_type == 7: #for cancel_job
+			instance.job_card_status, instance.job_card_cancelled_at = job_card_times_and_statuses(action_type=action_type)
+
+		return super().update(instance, validated_data=None)
 
 
 	def save(self, current_user):
@@ -298,8 +311,6 @@ class JobCardSerializers(serializers.ModelSerializer):
 					objCategories = getJobCardCategories(UserCompany)
 					jobCategoryExists = Check_if_object_exists(objCategories, category)
 					if jobCategoryExists or category == None: 
-						print(f'jobCategoryExists is {jobCategoryExists}, category is {category}')
-												#if job_card_employees == None or employee_exixts: #to save everything
 						job_card.job_card_category = category
 						job_card.job_card_requester = job_card_requester #assigning the requester
 						job_card.job_card_client = job_card_client #assigning the client

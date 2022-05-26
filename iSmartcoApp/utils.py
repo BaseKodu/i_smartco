@@ -1,3 +1,4 @@
+import datetime
 from iSmartcoApp.models import JobCard,  Company, User, MaterialUsed, JobCardCategory, ClientUser
 from iSmartcoApp.constants import GENERAL_COMPANY
 from django.db.models import Q
@@ -274,3 +275,43 @@ def list_of_countries():
     1:
 
 '''
+
+'''
+def start_job():#only used once in a job card
+    status = 4
+    started_at = datetime.datetime.now()
+    return status, started_at
+
+def pause_job():
+	status = 5
+	last_pause = datetime.datetime.now()		
+	return status, last_pause
+
+
+def continue_job(nva_time, last_pause):
+    status = 4
+    nva_time += datetime.datetime.now() - last_pause
+    return status, nva_time
+
+
+def complete_job():
+    status = 6
+    completed_at = datetime.datetime.now()
+    return status, completed_at
+	
+
+def cancel_job():
+    status = 7
+    cancelled_at = datetime.datetime.now()
+    return status, cancelled_at
+    '''
+
+def job_card_times_and_statuses(action_type = None, nva_time = None, last_pause = None):
+    if action_type == 8: #4 for start, 5 for pause, 6 for complete, 7 for cancel, 8 for continue
+        status = 4 #status:4 means in progress
+        time = nva_time + (datetime.datetime.now() - last_pause)
+    else:
+        status = action_type
+        time = datetime.datetime.now()
+
+    return status, time
