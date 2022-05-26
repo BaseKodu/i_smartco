@@ -159,7 +159,7 @@ class JobCard(models.Model):
     job_card_created_at = models.DateTimeField(auto_now_add=True)
     job_card_started_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     job_card_completed_at = models.DateTimeField(auto_now_add=False, null=True, blank=True)
-    job_card_employees = models.ManyToManyField(User, blank=True, null=True, related_name='job_card_technicians')
+    job_card_employees = models.ManyToManyField(User, blank=True)
     job_card_category = models.ForeignKey('JobCardCategory', on_delete=models.CASCADE, null=True, blank=True)
     job_card_status_options = ((1,'New'), (2,'Accepted'), (3,'Travelling to Site'), (4,'In Progress'), (5,'Paused'),  (6,'Completed'), (7,'Cancelled'))
     job_card_status = models.IntegerField(null=True, blank=True, choices=job_card_status_options, default=1)

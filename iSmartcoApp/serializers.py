@@ -228,13 +228,14 @@ class JobCardSerializers(serializers.ModelSerializer):
 		return JobCard.objects.filter(job_card_company=company_id, job_category=category_id, job_card_technicians=employee_id, job_card_client=client_id, job_card_started_at=date_started, job_card_completed_at=date_completed, job_card_status=job_card_status, job_card_priority=priority).count()
 
 
-
 	class Meta:
 		model = JobCard
 		#fields = '__all__'
 		fields = ['job_card_number', 'job_card_reference', 'job_card_description', 'job_card_client', 'job_card_requester','job_card_category', 'job_card_employees']
 		extra_kwargs = {
 				'job_card_number': {'read_only': True},
+				'job_card_employees':{'required': False},
+
 		}
 	
 	
@@ -273,23 +274,6 @@ class JobCardSerializers(serializers.ModelSerializer):
 			job_card_client = self.validated_data['job_card_client']
 		#Ensuring that selected Client is in the list of clients you can work with
 		Client_exists = Check_if_object_exists(objClients, job_card_client)
-
-
-		employee_exixts = False
-		message = 'All employees are assigned to this job card'
-		job_card_employees = self.validated_data['job_card_employees'],
-		objEmployees = getEmployees(UserCompany)
-		for emp in job_card_employees:
-			if Check_if_object_exists(objEmployees, emp):
-				job_card.job_card_employees.add(emp)
-				employee_exixts = True
-			else:
-				employee_exixts = False
-				message = 'Employee does not exist'
-			
-
-		if not employee_exixts:
-			message = 'One or more employees are not assigned to this job card'
 		
 		list_for_non_existant_employees = []
 
@@ -316,25 +300,27 @@ class JobCardSerializers(serializers.ModelSerializer):
 					if jobCategoryExists or category == None: 
 						print(f'jobCategoryExists is {jobCategoryExists}, category is {category}')
 												#if job_card_employees == None or employee_exixts: #to save everything
-							job_card.job_card_category = category
-							job_card.job_card_requester = job_card_requester #assigning the requester
-							job_card.job_card_client = job_card_client #assigning the client
-							job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
-							job_card.job_card_company = UserCompany # assign the company on the job card
-							job_card.save()
+						job_card.job_card_category = category
+						job_card.job_card_requester = job_card_requester #assigning the requester
+						job_card.job_card_client = job_card_client #assigning the client
+						job_card.job_card_number = generateNextJobCardNumber(company_id = UserCompany) #generating the job card number, unique per company
+						job_card.job_card_company = UserCompany # assign the company on the job card
+						job_card.save()
+						#adding the employees to the job card
+						employee_exixts = False
+						try: #if theres a value in job_card_employees then we need to add the employees to the job card
+							job_card_employees = self.validated_data['job_card_employees']
+							objEmployees = getEmployees(UserCompany)
 							for emp in job_card_employees:
 								employee_exixts = Check_if_object_exists(objEmployees, emp)
 								if employee_exixts:
 									job_card.job_card_employees.add(emp)
 								else:
 									list_for_non_existant_employees.append(emp) #find a way to let the user know that some people cannot be selected
-									job_card_employees = self.validated_data['job_card_employees']
-									objEmployees = getEmployees(UserCompany)
 							job_card.save()
-							return job_card 
-
-						else:
-							raise serializers.ValidationError({'job_card_employees': list_for_non_existant_employees}, code='These are invalid employees')
+						except: #if theres no employees then we dont need to add them to the job card
+							job_card.save()
+						return job_card #return the job card object with employees added this time
 					else:
 						raise serializers.ValidationError({'job_card_category': 'Not a valid category'})
 				else:
