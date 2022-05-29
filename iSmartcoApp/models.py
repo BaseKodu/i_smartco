@@ -129,6 +129,16 @@ class Address(models.Model):
 
 
 
+<<<<<<< Updated upstream
+=======
+class Client(models.Model):
+    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    phone = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+>>>>>>> Stashed changes
 
     def __str__(self):
         return '%s %s %s %s %s %s' % (self.buildingNumber, self.buildingName, self.steetNumber, self.street, self.city, self.belongs_to)
@@ -148,11 +158,33 @@ class Company(models.Model):
         return self.name
 
 
+<<<<<<< Updated upstream
 class JobCard(models.Model):
     id = models.AutoField(primary_key=True)
     job_card_number = models.CharField(max_length=100, null=True, blank=True)#unique for every company
     job_card_client = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True, related_name='job_card_client')
     #job_card_client = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) #job_card_requester might be making this redundant
+=======
+class Employee(models.Model):
+    #before production, remember to accomodate for users in other countries
+    id = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    employee_id_num = models.CharField(max_length=13, unique=False)
+    employee_name = models.CharField(max_length=50, null=True, blank=True)
+    employee_phone = models.CharField(max_length=10, null=True, blank=True)
+    employee_address = models.CharField(max_length=100, null=True, blank=True)
+    employee_designation = models.CharField(max_length=50, null=True, blank=True)
+    employee_joining_date = models.DateField(blank=True, null=True)
+    employee_leaving_date = models.DateField(blank=True, null=True)
+    #created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    
+    def __str__(self):
+        return self.employee_name
+
+class JobCard(models.Model):
+    id = models.AutoField(primary_key=True)
+    job_card_number = models.CharField(max_length=100, null=True, blank=True)#unique for every company
+    job_card_client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True) #job_card_requester might be making this redundant
+>>>>>>> Stashed changes
     job_card_company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
     job_card_reference = models.CharField(max_length=100, null=True, blank=True)#can include invoice number or PO number
     job_card_location = models.CharField(max_length=100, null=True , blank=True) # department
@@ -191,7 +223,11 @@ class JobCardCategory(models.Model):
 
 class ClientUser(models.Model): #different users in each organization. They request jobs in the organization   
     id = models.AutoField(primary_key=True)
+<<<<<<< Updated upstream
     works_for = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+=======
+    works_for = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
+>>>>>>> Stashed changes
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(max_length=100, null=True, blank=True)
@@ -221,11 +257,19 @@ class MaterialUsed(models.Model):
         return self.material_name
 
 
+<<<<<<< Updated upstream
 
 '''
 from iSmartcoApp.utils import (generateNextClientNumber,
                                generateNextEmployeeNumber,
                                generateNextJobCardNumber)
+=======
+#function for creating job card number
+def generateNextJobCardNumber(company_id):
+    nextNum = JobCard.objects.filter(job_card_company=company_id).count()#find a much more effective way. lets say there's 10 job. and [5] gets deleted. this thing will count 9 jobs and make a job number 10. therefore, theres no uniqueness.  
+    nextNum += 1
+    return nextNum
+>>>>>>> Stashed changes
 
 
 @receiver(post_save, sender=User)
@@ -245,14 +289,23 @@ def create_Job_Card_Number(sender, instance, created, **kwargs):
         instance.job_card_number = nextNum
         instance.save()
 
+<<<<<<< Updated upstream
 '''
 '''
+=======
+
+
+>>>>>>> Stashed changes
 @receiver(post_save, sender=User)
 #Creating a function which will automatically insert data into the Employee or client table
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         if instance.user_type == 3:
+<<<<<<< Updated upstream
             User.objects.create(id=instance, name=instance.first_name)
+=======
+            Client.objects.create(id=instance, name=instance.first_name)
+>>>>>>> Stashed changes
         elif instance.user_type == 2 or instance.user_type == 4:
             Employee.objects.create(id=instance)
             #created_by = Company.objects.get(created_by=instance.email)

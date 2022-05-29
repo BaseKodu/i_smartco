@@ -10,8 +10,15 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user, get_user_model
 
 
+<<<<<<< Updated upstream
 from iSmartcoApp.models import (Company, JobCard,
                                 JobCardCategory, MaterialUsed, User, ClientUser, JobCardCategory, Address)
+=======
+from iSmartcoApp.models import (Client, Company, Employee, JobCard,
+                                JobCardCategory, MaterialUsed, User)
+from iSmartcoApp.utils import (getClients)		
+
+>>>>>>> Stashed changes
 
 
 
@@ -32,12 +39,22 @@ class UserSerializer(serializers.Serializer):
 	#last_login = serializers.DateTimeField(required=False, allow_blank=True)
 	date_joined = serializers.DateTimeField(required=False)
 	user_company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), required=False)
+<<<<<<< Updated upstream
 	user_type = serializers.IntegerField(required=False)
+=======
+>>>>>>> Stashed changes
 
 	
 	class Meta:
 		model = User
+<<<<<<< Updated upstream
 		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company', 'user_type']
+=======
+		fields = ['id','first_name', 'last_name', 'email', 'is_active', 'date_joined', 'user_company']
+
+	def getCurrentUser(self):
+		return self.context['request'].user
+>>>>>>> Stashed changes
 	
 
 
@@ -105,6 +122,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 						#user=self.instance,
 						#created_by = self.validated_data['email']
 					)
+<<<<<<< Updated upstream
 
 		#validating the password
 		password = self.validated_data['password']
@@ -117,8 +135,22 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		user.user_company = company #setting the company fk on the user table
 		user.save() #saving the user
 		return user
+=======
+>>>>>>> Stashed changes
 
+		#validating the password
+		password = self.validated_data['password']
+		password2 = self.validated_data['password2']
+		if password != password2: #trying to match passwords. Other validation, ie valid characters, will be done by django automatically
+			raise serializers.ValidationError({'password': 'Passwords must match.'})
+		
+		user.set_password(password) #setting the password
+		company.save() #saving the company
+		user.user_company = company #setting the company fk
+		user.save() #saving the user
+		return user
 
+<<<<<<< Updated upstream
 class ClientSerializers(serializers.ModelSerializer):
 
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
@@ -128,21 +160,43 @@ class ClientSerializers(serializers.ModelSerializer):
 	class Meta:
 		model = User
 		fields = ['email', 'username', 'password', 'password2', 'user_type', 'client_name', 'user_company']	
+=======
+#curr_User_Company = User.user_company.id
+
+class ClientSerializers(serializers.ModelSerializer):
+
+	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+	client_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
+
+
+	class Meta:
+		model = User
+		fields = ['email', 'username', 'password', 'password2', 'user_type', 'client_name']	
+>>>>>>> Stashed changes
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
 		}
 
 	
+<<<<<<< Updated upstream
 	def	save(self, current_user):
 		usr_comp = current_user.user_company
+=======
+	def	save(self):
+>>>>>>> Stashed changes
 		user = User(
 					#creating a user record. it will record company fk
 					email=self.validated_data['email'],
 					username=self.validated_data['username'],
 					user_type = 3,
+<<<<<<< Updated upstream
 					first_name = self.validated_data['client_name'],
 					user_company = usr_comp)
+=======
+					first_name = self.validated_data['client_name'],)
+					#user_company = get_user(self.request).user_company)
+>>>>>>> Stashed changes
 					
 
 		
@@ -173,17 +227,26 @@ class CompanySerializers(serializers.ModelSerializer):
 class EmployeeSerializers(serializers.ModelSerializer):
 
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
+<<<<<<< Updated upstream
 	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=False)
 
 	class Meta:
 		model = User
 		#fields = '__all__'
 		fields = ['email', 'username', 'password', 'password2', 'employee_name', 'user_type']
+=======
+	employee_name = serializers.CharField(style={'input_type' : 'text'}, required=True)
+
+	class Meta:
+		model = Employee
+		fields = '__all__'
+>>>>>>> Stashed changes
 		extra_kwargs = {
 				'password': {'write_only': True}, #dont want anyone to see the password
 				'user_type': {'read_only': True},
 		}
 
+<<<<<<< Updated upstream
 	def	save(self, current_user):
 		usr_comp = current_user.user_company #current_user contains the object of logged in user
 		user = User(
@@ -197,6 +260,15 @@ class EmployeeSerializers(serializers.ModelSerializer):
 					)
 
 		
+=======
+	def	save(self):
+		user = Employee(
+					#creating a user record. it will record employee fk
+					email=self.validated_data['email'],
+					username=self.validated_data['username'],
+					user_type = 4,
+					first_name = self.validated_data['employee_name'],)
+>>>>>>> Stashed changes
 		
 		#validating the password
 		password = self.validated_data['password']	
@@ -208,7 +280,10 @@ class EmployeeSerializers(serializers.ModelSerializer):
 		user.save() #saving the user
 
 	
+<<<<<<< Updated upstream
 from iSmartcoApp.utils import (getClients, generateNextJobCardNumber, getClientUsers, Check_if_object_exists, getJobCardCategories, getEmployees, job_card_times_and_statuses )		
+=======
+>>>>>>> Stashed changes
 
 class JobCardSerializers(serializers.ModelSerializer):
 	
@@ -237,6 +312,7 @@ class JobCardSerializers(serializers.ModelSerializer):
 				'job_card_number': {'read_only': True},
 				'job_card_employees':{'required': False},
 
+<<<<<<< Updated upstream
 		}
 	
 	
@@ -391,6 +467,53 @@ class ClientUserSerializer(serializers.ModelSerializer):
 
 
 
+=======
+	class Meta:
+		model = JobCard
+		fields = '__all__'
+		#fields = ['job_card_number', 'job_card_reference', 'job_card_status', 'job_card_description', 'company_name', 'client_name', 'employee']/
+		extra_kwargs = {
+				'job_card_number': {'read_only': True},
+				'password': {'write_only': True},
+				'company_name': {'write_only': False},
+				#'job_card_number': {'read_only': True}
+		}
+	
+	
+	#I want to restrict users to see to clent info based on their client type. if client_type=1:see all clients. if client_type=2:see only clients that are assigned to them. if client_type=3:see only clients themselves. if client_type=4, see clients.
+	#jc_client = getClients()
+
+	UserType = User.user_type
+	UserCompany = User.user_company
+	print(f'UserCompany is {UserCompany}')
+	objClients = getClients(UserType, UserCompany)
+
+	def save(self):
+		job_card = JobCard(
+							job_card_reference = self.validated_data['job_card_reference'],
+							job_card_status = self.validated_data['job_card_status'],
+							job_card_description = self.validated_data['job_card_description'],
+							job_card_technicians = self.validated_data['job_card_technicians'],
+							job_card_company = self.validated_data['job_card_company'],
+							job_card_client = self.validated_data['job_card_client'],
+							job_card_started_at = self.validated_data['job_card_started_at'],
+							job_card_completed_at = self.validated_data['job_card_completed_at'],
+							job_card_priority = self.validated_data['job_card_priority'],
+							job_card_category = self.validated_data['job_card_category'],
+						)
+		
+		#validating if user can see client data
+		job_card_client = self.validated_data['job_card_client']
+		try :
+			if self.UserType ==2 or self.UserType ==4 and job_card_client in self.objClients: # if user_type is compadmin and employee they shoulb be able to see all company clients
+				job_card.job_card_client = self.validated_data['job_card_client']
+			elif self.UserType ==3 and job_card_client == self.objClients:
+				job_card.job_card_client = self.validated_data['job_card_client']
+			job_card.save() #saving the job_card
+			return job_card
+		except :
+			raise serializers.ValidationError({'job_card_client': 'You are not authorized to create a job card for client.'})
+>>>>>>> Stashed changes
 
 class JobCardCategorySerializer(serializers.ModelSerializer):
 	class Meta:
