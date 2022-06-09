@@ -18,7 +18,7 @@ urlpatterns=[
     re_path(r'^JobCardCategoryApi$', views.JobCardCategoryApi),
     re_path(r'^Job_Card/start_job_card$', views.start_job_card),
     re_path(r'^Job_Card/pause_job_card$', views.pause_job_card),
-    re_path(r'^Job_Card/complete_job_card$', views.continue_job_card),
+    re_path(r'^Job_Card/continue_job_card$', views.continue_job_card),
     re_path(r'^Job_Card/complete_job_card$', views.complete_job_card),
     re_path(r'^Job_Card/cancel_job_card$', views.cancel_job_card),
 =======

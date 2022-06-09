@@ -1,8 +1,10 @@
-<<<<<<< Updated upstream
 import datetime
 from iSmartcoApp.models import JobCard,  Company, User, MaterialUsed, JobCardCategory, ClientUser
 from iSmartcoApp.constants import GENERAL_COMPANY
 from django.db.models import Q
+import datetime
+#from datetime import datetime, timezone
+#now = datetime.now(timezone.utc)
 ''' for circular import error use this although with ready(). You'll read up more info on that
 from django.apps import apps
 JobCard = apps.get_model('iSmartcoApp', 'JobCard')
@@ -308,15 +310,18 @@ def cancel_job():
     '''
 
 def job_card_times_and_statuses(action_type = None, nva_time = None, last_pause = None):
+    '''
+    This function is used to either start, pause, continue, complete, or cancel a job card. It returns the status and the time of the action. The time returned is in context of the time required: non-value added time, time paused, restart.
+    '''
     if action_type == 8: #4 for start, 5 for pause, 6 for complete, 7 for cancel, 8 for continue
         status = 4 #status:4 means in progress
-        time = nva_time + (datetime.datetime.now() - last_pause)
+        time = nva_time + (datetime.datetime.now(datetime.timezone.utc) - last_pause)
     else:
         status = action_type
+        #now = datetime.now(timezone.utc)
         time = datetime.datetime.now()
 
     return status, time
-=======
 from iSmartcoApp.models import JobCard, Employee, Company, Client, User, MaterialUsed, JobCardCategory
 
 
@@ -335,4 +340,3 @@ def getClients(UserType,UserCompany):
         clients = User.objects.get(user_id=UserCompany.id)#only able to see themselves
     
     return clients
->>>>>>> Stashed changes
