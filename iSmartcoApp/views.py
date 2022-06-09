@@ -10,7 +10,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from iSmartcoApp.models import Company, JobCard, JobCardCategory, User
+from iSmartcoApp.models import Client, Company, Employee, JobCard, User
 from iSmartcoApp.serializers import *
 
 # Create your views here.
@@ -82,6 +82,8 @@ def RegisterApi(request):
 
 
 
+#create job card
+
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def JobCardApi(request):
@@ -113,10 +115,39 @@ def JobCardApi(request):
 def ClientApi(request):
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
-		serializer = ClientSerializers(data=data)
+		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
 			#serializer.data['user_company'] = user_company
 			serializer.save(current_user = request.user)
+			return JsonResponse(serializer.data, status=201)
+		return JsonResponse(serializer.errors, status=400)
+	
+	elif request.method == 'GET':
+		job_card = JobCard.objects.all()
+		serializer = JobCardSerializers(job_card, many=True)
+		return JsonResponse(serializer.data, safe=False)
+
+	elif request.method == 'PUT':
+		data = JSONParser().parse(request)
+		job_card = JobCard.objects.get(id=data['id'])
+		serializer = JobCardSerializers(job_card, data=data)
+		if serializer.is_valid():
+			serializer.save()
+			return JsonResponse(serializer.data, status=201) #Warning : serializer.data does not return user_company value. It return null although it it recorded in the database
+		return JsonResponse(serializer.errors, status=400)
+	
+
+
+
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+#def CompanyApi(request): #could very well prove to be unnecessary
+def ClientApi(request):
+	if request.method == 'POST':
+		data = JSONParser().parse(request)
+		serializer = ClientSerializers(data=data)
+		if serializer.is_valid():
+			serializer.save()
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	elif request.method == 'GET':
@@ -128,14 +159,13 @@ def ClientApi(request):
 		serializer = ClientSerializers(data=data)
 		if serializer.is_valid():
 			serializer.save()
-			return JsonResponse(serializer.data, status=201) #Warning : serializer.data does not return user_company value. It return null although it it recorded in the database
+			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 	
 
 
 
 @csrf_exempt
-@permission_classes([IsAuthenticated])
 def CompanyApi(request): #could very well prove to be unnecessary
 	if request.method == 'POST':
 		data = JSONParser().parse(request)
@@ -160,32 +190,6 @@ def CompanyApi(request): #could very well prove to be unnecessary
 
 
 		
-
-#create employee
-@csrf_exempt
-@permission_classes([IsAuthenticated])
-def EmployeeApi(request):
-	if request.method == 'POST':
-		data = JSONParser().parse(request)
-		serializer = EmployeeSerializers(data=data)
-		if serializer.is_valid():# raises key error: Groups but records the data in the database. Written in known issues
-			serializer.save(current_user = request.user)
-			return JsonResponse(serializer.data, status=201)
-		return JsonResponse(serializer.errors, status=400)
-	
-	elif request.method == 'GET':
-		employee = Employee.objects.all()
-		serializer = EmployeeSerializers(employee, many=True)
-		return JsonResponse(serializer.data, safe=False)
-
-	elif request.method == 'PUT':
-		data = JSONParser().parse(request)
-		employee = Employee.objects.get(id=data['id'])
-		serializer = EmployeeSerializers(employee, data=data)
-		if serializer.is_valid():
-			serializer.save()
-			return JsonResponse(serializer.data)
-		return JsonResponse(serializer.errors, status=400)
 
 
 
