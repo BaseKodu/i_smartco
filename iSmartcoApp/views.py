@@ -1,3 +1,5 @@
+from email.generator import DecodedGenerator
+from email.header import decode_header
 from django.contrib.auth import login, logout
 from django.http.response import JsonResponse
 from django.shortcuts import render
@@ -227,15 +229,16 @@ def JobCardCategoryApi(request):
 		return JsonResponse(serializer.errors, status=400)
 
 
+#==========================================================================#
 @csrf_exempt
 @permission_classes([IsAuthenticated])
 def start_job_card(request):
-	if request.method == 'PUT':
+	if request.method == 'PUT': #quick fix
 		data = JSONParser().parse(request)
 		job_card_obj = JobCard.objects.get(id=data['id'])
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.update(instance=job_card_obj, action_type=4)
+			serializer.update_times_and_statuses(instance=job_card_obj, action_type=4)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 
@@ -244,9 +247,10 @@ def start_job_card(request):
 def pause_job_card(request):
 	if request.method == 'PUT':
 		data = JSONParser().parse(request)
+		job_card_obj = JobCard.objects.get(id=data['id'])
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.update(action_type=5)
+			serializer.update_times_and_statuses(instance=job_card_obj, action_type=5)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 
@@ -256,9 +260,10 @@ def pause_job_card(request):
 def continue_job_card(request):
 	if request.method == 'PUT':
 		data = JSONParser().parse(request)
+		job_card_obj = JobCard.objects.get(id=data['id'])
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.update(action_type=8)
+			serializer.update_times_and_statuses(instance=job_card_obj, action_type=8)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 
@@ -267,9 +272,10 @@ def continue_job_card(request):
 def complete_job_card(request):
 	if request.method == 'PUT':
 		data = JSONParser().parse(request)
+		job_card_obj = JobCard.objects.get(id=data['id'])
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.update(action_type=6)
+			serializer.update_times_and_statuses(instance=job_card_obj, action_type=6)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
 
@@ -278,8 +284,12 @@ def complete_job_card(request):
 def cancel_job_card(request):
 	if request.method == 'PUT':
 		data = JSONParser().parse(request)
+		job_card_obj = JobCard.objects.get(id=data['id'])
 		serializer = JobCardSerializers(data=data)
 		if serializer.is_valid():
-			serializer.update(action_type=7)
+			serializer.update_times_and_statuses(instance=job_card_obj, action_type=7)
 			return JsonResponse(serializer.data, status=201)
 		return JsonResponse(serializer.errors, status=400)
+
+
+#=======================================================================================================#

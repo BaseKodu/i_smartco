@@ -8,6 +8,9 @@ from django.template.loader import render_to_string
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user, get_user_model
+from datetime import datetime, timezone
+
+
 
 
 from iSmartcoApp.models import (Company, JobCard,
@@ -248,26 +251,26 @@ class JobCardSerializers(serializers.ModelSerializer):
 
 
 		
-	def update(self, instance, action_type):
+	def update_times_and_statuses(self, instance, action_type):
 		if action_type == 4:
 			instance.job_card_status, instance.job_card_started_at = job_card_times_and_statuses(action_type=action_type)
 		elif action_type == 5:
 			instance.job_card_status, instance.job_card_last_pause = job_card_times_and_statuses(action_type=action_type)
 		elif action_type == 8: #for continue
-			instance.job_card_status, instance.job_card_nva_time = job_card_times_and_statuses(action_type=action_type, job_card_last_pause=instance.job_card_last_pause)
+			instance.job_card_status, instance.job_card_nva_time = job_card_times_and_statuses(action_type=action_type, last_pause=instance.job_card_last_pause)
 		elif action_type == 6:
 			instance.job_card_status, instance.job_card_completed_at = job_card_times_and_statuses(action_type=action_type)
 		elif action_type == 7: #for cancel_job
-			instance.job_card_status, instance.job_card_cancelled_at = job_card_times_and_statuses(action_type=action_type)
+			instance.job_card_status, instance.job_card_completed_at = job_card_times_and_statuses(action_type=action_type)
 
-		return super().update(instance, validated_data=None)
+		instance.save()
+		return instance
 
 
 	def save(self, current_user):
 		job_card = JobCard(
 							job_card_reference = self.validated_data['job_card_reference'],
 							job_card_description = self.validated_data['job_card_description'],
-							
 						)
 
 		#Extract the usertype and user company from the current user and assign them to objClients, which will return a list of clients you can work with
